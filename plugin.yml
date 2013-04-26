@@ -1,0 +1,8 @@
+name: CustomHealth
+main: at.felixfritz.customhealth.CustomHealth
+version: 0.6 alpha
+author: felixfritz
+
+commands:
+  chealth:
+    usage: /<command>

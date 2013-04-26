@@ -1,0 +1,25 @@
+# This file just servers as a help page for you and does not contribute as a configuration file.
+# 
+# Potion 1: Speed
+# Potion 2: Slow
+# Potion 3: Fast Digging
+# Potion 4: Slow Digging
+# Potion 5: Increase Damage (Strength)
+#
+# Potion 6: Heal
+# Potion 7: Harm
+# Potion 8: Jump
+# Potion 9: Confusion (Nausea)
+# Potion 10: Regeneration
+# 
+# Potion 11: Damage Resistance
+# Potion 12: Fire Resistance
+# Potion 13: Water Breathing
+# Potion 14: Invisibility
+# Potion 15: Blindness
+# 
+# Potion 16: Night Vision
+# Potion 17: Hunger
+# Potion 18: Weakness
+# Potion 19: Poison
+# Potion 20: Wither
