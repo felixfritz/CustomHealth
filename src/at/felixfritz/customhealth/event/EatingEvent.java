@@ -9,40 +9,84 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import at.felixfritz.customhealth.foodtypes.FoodDataBase;
 import at.felixfritz.customhealth.foodtypes.FoodValue;
 
+/**
+ * Most important class!<br>
+ * Called with the player eating an edible food
+ * @author felixfritz
+ */
 public class EatingEvent implements Listener {
 	
+	//FileConfiguration, initialized with the constructor
 	private FileConfiguration cfg;
 	
+	/**
+	 * Initialize the FileConfiguration above
+	 */
 	public EatingEvent(FileConfiguration cfg) {
 		this.cfg = cfg;
 	}
 	
+	
+	/**
+	 * Most important method, player ate something!
+	 * @param evt
+	 */
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onPlayerClick(PlayerItemConsumeEvent evt) {
-		
-		
-		evt.setCancelled(true);
+	public void onPlayerConsume(PlayerItemConsumeEvent evt) {
 		
 		Player p = evt.getPlayer();
 		Material m = evt.getItem().getType();
 		
+		//If the player has an empty glass bottle in his hand, he probably drank a potion -> don't cancel those effects
+		if(m.equals(Material.POTION))
+			return;
+		
+		//Don't let the player regain any health or food levels as long as I don't want him to
+		evt.setCancelled(true);
+		
+		/*
+		 * Check first, if he ate the MushroomSoup, put a bowl in his inventory then
+		 */
 		if(!p.getItemInHand().getType().equals(Material.MUSHROOM_SOUP))
 			p.setItemInHand(new ItemStack(m, p.getItemInHand().getAmount() - 1));
 		else
 			p.setItemInHand(new ItemStack(Material.BOWL, 1));
 		
+		/*
+		 * Check, if the player drank milk. Reset all effects, if so.
+		 */
+		if(p.getItemInHand().getType().equals(Material.MILK_BUCKET)) {
+			p.setItemInHand(new ItemStack(Material.BUCKET, 1));
+			for(PotionEffect effect : p.getActivePotionEffects())
+				p.removePotionEffect(effect.getType());
+		}
+		
+		
+		/*
+		 * Check first, if the food is edible or not
+		 */
 		if(m.isEdible()) {
+			
+			/*
+			 * Go through each available food out there and check, which one the player took
+			 */
 			String[] foods = FoodDataBase.getFoodNames();
 			for(int x = 0; x < foods.length; x++) {
 				if(foods[x].equalsIgnoreCase(m.name())) {
 					
+					//Get all the information about the food with the FoodValue object
 					FoodValue tmp = FoodDataBase.foods.get(x);
 					
+					/*
+					 * Regain health and hunger.
+					 * If it's too much or too less, make sure to set it either to 20 (max) or 0 (min)
+					 */
 					int health = p.getHealth() + tmp.getRegenHearts();
 					int hunger = p.getFoodLevel() + tmp.getRegenHunger();
 					
@@ -54,16 +98,21 @@ public class EatingEvent implements Listener {
 					
 					p.setHealth(health);
 					p.setFoodLevel(hunger);
-					p.setSaturation(1);
+					p.setSaturation(10); //Saturation: When it reaches 0, the food bar starts jiggeling
 					
+					//Check first, if the player has added any effects to the food
 					if(cfg.getString("food." + m.name().toLowerCase() + ".effects").equalsIgnoreCase("none"))
 						continue;
 					
+					/*
+					 * Remove the [, ] and all spacebars, split it with the ';'
+					 */
 					String[] effects = cfg.getString("food." + m.name().toLowerCase() + ".effects").replaceAll("\\[", "").
 							replaceAll("\\]", "").replaceAll(" ", "").split(";");
 					
+					//effect is a string, I want the player to be able to type in, eg. "speed" instead of a "1"
 					String effectString = "0";
-					float effectProbability = 1;
+					float effectProbability = 1; //Either 1 or lower
 					int effectDuration = 30;
 					int effectStrength = 0;
 					
@@ -108,14 +157,14 @@ public class EatingEvent implements Listener {
 						if(effectString.equalsIgnoreCase("0"))
 							continue;
 						
+						//Math.random() is a number between 0 and 1 -> 100% will be always true
 						if(Math.random() <= effectProbability) {
 							try {
 								int effectId = Integer.valueOf(effectString);
+								p.removePotionEffect(PotionEffectType.getById(effectId));
 								p.addPotionEffect(PotionEffectType.getById(effectId).createEffect(
 										(40 * effectDuration) + 19, effectStrength));
 							} catch(NumberFormatException e) {
-								p.addPotionEffect(PotionEffectType.getByName(effectString).createEffect(
-										effectDuration, effectStrength));
 							} catch(IllegalArgumentException e) {
 								p.sendMessage(ChatColor.RED + effectString + " is not registered!");
 							} catch(Exception e) {

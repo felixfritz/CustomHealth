@@ -2,12 +2,22 @@ package at.felixfritz.customhealth.foodtypes;
 
 import org.bukkit.Material;
 
+/**
+ * The FoodValue: An object, that contains the material, 
+ * the amount of hearts it regenerates and the amount of hunger bars it fills up
+ * @author felixfritz
+ *
+ */
 public class FoodValue {
 	
 	private Material foodName;
 	private int regenHearts;
 	private int regenHunger;
 	
+	/**
+	 * Set it to a specific material. It will regenerate 0 hearts and 0 hunger bars!
+	 * @param foodName
+	 */
 	public FoodValue(Material foodName) {
 		this.foodName = foodName;
 		regenHearts = 0;
