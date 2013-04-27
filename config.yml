@@ -1,12 +1,12 @@
 #
-# CustomRegen Configurations
+# CustomHealth Configurations
 #
 # A player has a total amount of 20 hearts and 20 food bars
 # If a player eats the food, you can decide, how many hearts or food bars should be filled up
 # 
 
 messages:
-  no-permission: "&4You don't hav the permission."
+  no-permission: "&4You don't have the permission."
   item-not-edible: "&4The item you chose itn't edible."
   food-info: "&8Food: &c<food><n>&8Hearts: &c<hearts><n>&8Hunger: &c<hunger>"
 
@@ -36,7 +36,7 @@ settings:
 # [4, 78%, 10, 3] -> Slow Digging potion, 78% chance, 10 sec, strength 3
 #
 # You can also add multiple effects using the semicolon:
-# [10; 12, 14%; 17, 100%, 10, 5] -> Regeneration effect for 32 sec, a 14% chance of getting fire resistance for 32 sec and Hunger for 10 sec with the strength of 5
+# [10; 12, 14%; 17, 100%, 10, 5] -> Regeneration effect for 30 sec, a 14% chance of getting fire resistance for 30 sec and Hunger for 10 sec with the strength of 5
 # 
 
 food:

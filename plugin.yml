@@ -1,8 +1,12 @@
 name: CustomHealth
 main: at.felixfritz.customhealth.CustomHealth
-version: 0.6 alpha
+version: 1.0 Alpha
 author: felixfritz
 
 commands:
   chealth:
     usage: /<command>
+
+permissions:
+  customhealth.commands:
+    description: Use the /chealth command.
