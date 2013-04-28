@@ -105,80 +105,86 @@ public class EatingEvent implements Listener {
 						continue;
 					
 					/*
-					 * Remove the [, ] and all spacebars, split it with the ';'
+					 * Remove the [, ] and all spacebars, split it with the ';', add the effects to it
 					 */
-					String[] effects = cfg.getString("food." + m.name().toLowerCase() + ".effects").replaceAll("\\[", "").
-							replaceAll("\\]", "").replaceAll(" ", "").split(";");
-					
-					//effect is a string, I want the player to be able to type in, eg. "speed" instead of a "1"
-					String effectString = "0";
-					float effectProbability = 1; //Either 1 or lower
-					int effectDuration = 30;
-					int effectStrength = 0;
-					
-					for(String s : effects) {
-						String[] wtf = s.split(",");
-						
-						switch(wtf.length) {
-						case 4:
-							try {
-								effectStrength = Integer.valueOf(wtf[3]);
-							} catch(NumberFormatException e) {
-								p.sendMessage(ChatColor.RED + wtf[3] + " is not an integer!");
-								continue;
-							} catch(Exception e) {
-								p.sendMessage(ChatColor.RED + "Something went wrong when using " + wtf[3] + ".");
-								e.printStackTrace();
-							}
-						case 3:
-							try {
-								effectDuration = Integer.valueOf(wtf[2]);
-							} catch(NumberFormatException e) {
-								p.sendMessage(ChatColor.RED + wtf[2] + " is not an integer!");
-								continue;
-							} catch(Exception e) {
-								p.sendMessage(ChatColor.RED + "Something went wrong when using " + wtf[2] + ".");
-								e.printStackTrace();
-							}
-						case 2:
-							try {
-								effectProbability = Float.valueOf("0." + wtf[1].replaceAll("%", ""));
-							} catch(NumberFormatException e) {
-								p.sendMessage(ChatColor.RED + wtf[1] + " is not an integer!");
-								continue;
-							} catch(Exception e) {
-								p.sendMessage(ChatColor.RED + "Something went wrong when using " + wtf[1] + ".");
-								e.printStackTrace();
-							}
-						case 1:
-							effectString = wtf[0];
-						}
-						
-						if(effectString.equalsIgnoreCase("0"))
-							continue;
-						
-						//Math.random() is a number between 0 and 1 -> 100% will be always true
-						if(Math.random() <= effectProbability) {
-							try {
-								int effectId = Integer.valueOf(effectString);
-								p.removePotionEffect(PotionEffectType.getById(effectId));
-								p.addPotionEffect(PotionEffectType.getById(effectId).createEffect(
-										(40 * effectDuration) + 19, effectStrength));
-							} catch(NumberFormatException e) {
-							} catch(IllegalArgumentException e) {
-								p.sendMessage(ChatColor.RED + effectString + " is not registered!");
-							} catch(Exception e) {
-								p.sendMessage(ChatColor.RED + "Something went wrong. Check the console!");
-								e.printStackTrace();
-							}
-						}
-						
-					}
-					
-					
+					addEffects(p, cfg.getString("food." + m.name().toLowerCase() + ".effects").replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "").split(";"));
 				}
 			}
 			return;
+		}
+	}
+	
+	public void addEffects(Player p, String[] effects) {
+		
+		String effectString;
+		float effectProbability;
+		int effectDuration;
+		int effectStrength;
+		
+		for(String effect : effects) {
+			effectString = "0";
+			effectProbability = 1;
+			effectDuration = 30;
+			effectStrength = 0;
+			
+			String[] tmp = effect.split(",");
+			switch(tmp.length) {
+			case 4:
+				try {
+					effectStrength = Integer.valueOf(tmp[3]);
+				} catch(NumberFormatException e) {
+					p.sendMessage(ChatColor.RED + tmp[3] + " is not an integer!");
+					continue;
+				} catch(Exception e) {
+					p.sendMessage(ChatColor.RED + "Something went wrong when using " + tmp[3] + ".");
+					e.printStackTrace();
+				}
+			case 3:
+				try {
+					effectDuration = Integer.valueOf(tmp[2]);
+				} catch(NumberFormatException e) {
+					p.sendMessage(ChatColor.RED + tmp[2] + " is not an integer!");
+					continue;
+				} catch(Exception e) {
+					p.sendMessage(ChatColor.RED + "Something went wrong when using " + tmp[2] + ".");
+					e.printStackTrace();
+				}
+			case 2:
+				try {
+					effectProbability = Float.valueOf(tmp[1].replaceAll("%", "")) / 100;
+				} catch(NumberFormatException e) {
+					p.sendMessage(ChatColor.RED + tmp[1] + " is not an integer!");
+					continue;
+				} catch(Exception e) {
+					p.sendMessage(ChatColor.RED + "Something went wrong when using " + tmp[1] + ".");
+					e.printStackTrace();
+				}
+			case 1:
+				effectString = tmp[0];
+			}
+			
+			if(effectString.equalsIgnoreCase("0"))
+				continue;
+			
+			addEffects(p, effectString, effectProbability, effectDuration, effectStrength);
+		}
+	}
+	
+	public void addEffects(Player p, String effectString, float effectProbability, int effectDuration, int effectStrength) {
+		//Math.random() is a number between 0 and 1 -> 100% will be always true
+		if(Math.random() <= effectProbability) {
+			try {
+				int effectId = Integer.valueOf(effectString);
+				p.removePotionEffect(PotionEffectType.getById(effectId));
+				p.addPotionEffect(PotionEffectType.getById(effectId).createEffect(
+						(80 * effectDuration) + 19, effectStrength));
+			} catch(NumberFormatException e) {
+			} catch(IllegalArgumentException e) {
+				p.sendMessage(ChatColor.RED + effectString + " is not registered!");
+			} catch(Exception e) {
+				p.sendMessage(ChatColor.RED + "Something went wrong. Check the console!");
+				e.printStackTrace();
+			}
 		}
 	}
 }
