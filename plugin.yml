@@ -1,12 +1,36 @@
 name: CustomHealth
 main: at.felixfritz.customhealth.CustomHealth
-version: 1.0 Alpha
+version: 1.1 Alpha
 author: felixfritz
+website: http://dev.bukkit.org/server-mods/custom-health/
 
 commands:
   chealth:
     usage: /<command>
+    aliases: [customhealth, ch]
 
 permissions:
-  customhealth.commands:
-    description: Use the /chealth command.
+  customhealth.commands.*:
+    description: Use all /chealth commands.
+    default: op
+    children:
+      customhealth.commands.set: true
+      customhealth.commands.get: true
+      customhealth.commands.info: true
+      customhealth.commands.reset: true
+  
+  customhealth.commands.set:
+    description: Set health/food value of a food item.
+    default: op
+
+  customhealth.commands.get:
+    description: Get health/food/effect value of a food item.
+    default: op
+  
+  customhealth.commands.info:
+    description: Set health/food/effect value of a food item.
+    default: op
+  
+  customhealth.commands.reset:
+    description: Reset everything to the default value.
+    default: op
