@@ -17,7 +17,7 @@ public class Messenger {
 	 */
 	public static void sendMessage(String msg, CommandSender sender) {
 		//Split the whole message with the <n> shortcut that allows the player to create linebreaks.
-		String[] messages = ChatColor.translateAlternateColorCodes('&', msg).split("<n>");
+		String[] messages = ChatColor.translateAlternateColorCodes('&', msg).replaceAll("<player>", sender.getName()).split("<n>");
 		
 		for(String s : messages) {
 			sender.sendMessage(s);
