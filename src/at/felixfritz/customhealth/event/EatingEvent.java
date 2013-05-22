@@ -2,16 +2,16 @@ package at.felixfritz.customhealth.event;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
+import at.felixfritz.customhealth.foodtypes.EffectValue;
 import at.felixfritz.customhealth.foodtypes.FoodDataBase;
 import at.felixfritz.customhealth.foodtypes.FoodValue;
 
@@ -21,16 +21,6 @@ import at.felixfritz.customhealth.foodtypes.FoodValue;
  * @author felixfritz
  */
 public class EatingEvent implements Listener {
-	
-	//FileConfiguration, initialized with the constructor
-	private FileConfiguration cfg;
-	
-	/**
-	 * Initialize the FileConfiguration above
-	 */
-	public EatingEvent(FileConfiguration cfg) {
-		this.cfg = cfg;
-	}
 	
 	
 	/**
@@ -53,20 +43,19 @@ public class EatingEvent implements Listener {
 		/*
 		 * Check first, if he ate the MushroomSoup, put a bowl in his inventory then
 		 */
-		if(!p.getItemInHand().getType().equals(Material.MUSHROOM_SOUP))
-			p.setItemInHand(new ItemStack(m, p.getItemInHand().getAmount() - 1));
-		else
+		if(p.getItemInHand().getType().equals(Material.MUSHROOM_SOUP)) {
+			
 			p.setItemInHand(new ItemStack(Material.BOWL, 1));
 		
-		/*
-		 * Check, if the player drank milk. Reset all effects, if so.
-		 */
-		if(p.getItemInHand().getType().equals(Material.MILK_BUCKET)) {
+		} else if(p.getItemInHand().getType().equals(Material.MILK_BUCKET)) {
+			
 			p.setItemInHand(new ItemStack(Material.BUCKET, 1));
 			for(PotionEffect effect : p.getActivePotionEffects())
 				p.removePotionEffect(effect.getType());
-		}
 		
+		} else {
+			p.getItemInHand().setAmount(p.getItemInHand().getAmount() - 1);
+		}
 		
 		/*
 		 * Check first, if the food is edible or not
@@ -74,116 +63,76 @@ public class EatingEvent implements Listener {
 		if(m.isEdible()) {
 			
 			/*
-			 * Go through each available food out there and check, which one the player took
+			 * Check the food, the player has eaten
 			 */
-			String[] foods = FoodDataBase.getFoodNames();
-			for(int x = 0; x < foods.length; x++) {
-				if(foods[x].equalsIgnoreCase(m.name())) {
-					
-					//Get all the information about the food with the FoodValue object
-					FoodValue tmp = FoodDataBase.foods.get(x);
-					
-					/*
-					 * Regain health and hunger.
-					 * If it's too much or too less, make sure to set it either to 20 (max) or 0 (min)
-					 */
-					int health = p.getHealth() + tmp.getRegenHearts();
-					int hunger = p.getFoodLevel() + tmp.getRegenHunger();
-					
-					if(health > 20) health = 20;
-					if(hunger > 20) hunger = 20;
-					
-					if(health < 0) health = 0;
-					if(hunger < 0) hunger = 0;
-					
-					p.setHealth(health);
-					p.setFoodLevel(hunger);
-					p.setSaturation(10); //Saturation: When it reaches 0, the food bar starts jiggeling
-					
-					//Check first, if the player has added any effects to the food
-					if(cfg.getString("food." + m.name().toLowerCase() + ".effects").equalsIgnoreCase("none"))
-						continue;
-					
-					/*
-					 * Remove the [, ] and all spacebars, split it with the ';', add the effects to it
-					 */
-					addEffects(p, cfg.getString("food." + m.name().toLowerCase() + ".effects").replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "").split(";"));
-				}
-			}
+			FoodValue value = FoodDataBase.getFoodValue(m.name());
+			foodEaten(p, value);
+			
 			return;
 		}
 	}
 	
-	public void addEffects(Player p, String[] effects) {
-		
-		String effectString;
-		float effectProbability;
-		int effectDuration;
-		int effectStrength;
-		
-		for(String effect : effects) {
-			effectString = "0";
-			effectProbability = 1;
-			effectDuration = 30;
-			effectStrength = 0;
-			
-			String[] tmp = effect.split(",");
-			switch(tmp.length) {
-			case 4:
-				try {
-					effectStrength = Integer.valueOf(tmp[3]);
-				} catch(NumberFormatException e) {
-					p.sendMessage(ChatColor.RED + tmp[3] + " is not an integer!");
-					continue;
-				} catch(Exception e) {
-					p.sendMessage(ChatColor.RED + "Something went wrong when using " + tmp[3] + ".");
-					e.printStackTrace();
-				}
-			case 3:
-				try {
-					effectDuration = Integer.valueOf(tmp[2]);
-				} catch(NumberFormatException e) {
-					p.sendMessage(ChatColor.RED + tmp[2] + " is not an integer!");
-					continue;
-				} catch(Exception e) {
-					p.sendMessage(ChatColor.RED + "Something went wrong when using " + tmp[2] + ".");
-					e.printStackTrace();
-				}
-			case 2:
-				try {
-					effectProbability = Float.valueOf(tmp[1].replaceAll("%", "")) / 100;
-				} catch(NumberFormatException e) {
-					p.sendMessage(ChatColor.RED + tmp[1] + " is not an integer!");
-					continue;
-				} catch(Exception e) {
-					p.sendMessage(ChatColor.RED + "Something went wrong when using " + tmp[1] + ".");
-					e.printStackTrace();
-				}
-			case 1:
-				effectString = tmp[0];
+	
+	/**
+	 * Cake eat event
+	 * @param evt
+	 */
+	@EventHandler
+	public void onClickEvent(PlayerInteractEvent evt) {
+		try {
+			if(evt.getClickedBlock().getType().equals(Material.CAKE_BLOCK)) {
+				
+				Player p = evt.getPlayer();
+				p.setFoodLevel(getCorrectValue(p.getFoodLevel() - 2));
+				
+				foodEaten(p, FoodDataBase.getFoodValue("cake_block"));
 			}
-			
-			if(effectString.equalsIgnoreCase("0"))
-				continue;
-			
-			addEffects(p, effectString, effectProbability, effectDuration, effectStrength);
+		} catch(Exception e) {
+			evt.getPlayer().sendMessage(ChatColor.RED + "Something went wrong. Check the console!");
+			e.printStackTrace();
 		}
 	}
 	
-	public void addEffects(Player p, String effectString, float effectProbability, int effectDuration, int effectStrength) {
-		//Math.random() is a number between 0 and 1 -> 100% will be always true
-		if(Math.random() <= effectProbability) {
-			try {
-				int effectId = Integer.valueOf(effectString);
-				p.removePotionEffect(PotionEffectType.getById(effectId));
-				p.addPotionEffect(PotionEffectType.getById(effectId).createEffect(
-						(80 * effectDuration) + 19, effectStrength));
-			} catch(NumberFormatException e) {
-			} catch(IllegalArgumentException e) {
-				p.sendMessage(ChatColor.RED + effectString + " is not registered!");
-			} catch(Exception e) {
-				p.sendMessage(ChatColor.RED + "Something went wrong. Check the console!");
-				e.printStackTrace();
+	
+	/**
+	 * Checks the value for hearts and food levels, must be between 0 and 20.
+	 * @param val
+	 * @return
+	 */
+	private int getCorrectValue(int val) {
+		return (val > 20) ? 20 : (val < 0) ? 0 : val;
+	}
+	
+	
+	
+	/**
+	 * Update health and food bar, add effects if there are any
+	 * @param player
+	 * @param value FoodValue, which contains the amount of health and food bars restored, as well as the effects
+	 */
+	private void foodEaten(Player p, FoodValue value) {
+		/*
+		 * Set hunger and health of player.
+		 * Make sure it's also between 0 and 20, because it throws an error if it's above or below
+		 */
+		int health = value.getRegenHearts() + p.getHealth();
+		int food = value.getRegenHunger() + p.getFoodLevel();
+		
+		p.setHealth(getCorrectValue(health));
+		p.setFoodLevel(getCorrectValue(food));
+		p.setSaturation(5F);
+		
+		//Check, if there are any effects on the food
+		if(value.getEffects() != null && value.getEffects().size() != 0) {
+			
+			//Add all the effects from the array
+			for(EffectValue effect : value.getEffects()) {
+				
+				//Quick check for the probability: if a random number between 0 and 1 is greater than the probability (eg. 0.617 > 0.5), don't do anything
+				if(Math.random() <= effect.getProbability()) {
+					p.removePotionEffect(effect.getEffect());
+					p.addPotionEffect(effect.getEffect().createEffect((effect.getDuration() * 20) + 19, effect.getStrength()));
+				}
 			}
 		}
 	}
