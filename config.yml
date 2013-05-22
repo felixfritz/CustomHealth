@@ -5,10 +5,36 @@
 # If a player eats the food, you can decide, how many hearts or food bars should be filled up
 # 
 
+
+# You can use color codes using the & symbol and a hexadecimal number (0 - f), e.g. &4 (red), &f (white)
+# After every line break, you have to "reassign" the color again, otherwise it'll set it to white again
+# Variables, you can always use:
+#    <player> - Name of the source player (if it was the console, the name is "console")
+#    <n> - line break
 messages:
+  
   no-permission: "&4You don't have the permission."
-  item-not-edible: "&4The item you chose itn't edible."
-  food-info: "&8Food: &c<food><n>&8Hearts: &c<hearts><n>&8Hunger: &c<hunger>"
+  
+# variables:
+#    <food> - food name
+  item-not-edible: "&c<food> &4is not edible."
+  not-a-food-item: "&c<food> &4is not a food item."
+  
+# variables:
+#    <food> - food item
+#    <hearts> - hearts value
+#    <hunger> - hunger value
+#    <effects> - effects
+  food-info: "&8Food: &c<food><n>&8Hearts: &c<hearts><n>&8Hunger: &c<hunger><n>&8Effects: &c<effects>"
+  
+# variables: 
+#   <food> - food item
+#   <type> - either hearts or hunger
+#   <amount> - number used for type
+  set-successful: "&8Set &c<food> <type> &8value to &c<amount>&8!"
+  set-failed: "&4Could not set &c<food> <type> &4to &c<amount>&8!"
+
+
 
 
 settings:
@@ -55,7 +81,7 @@ food:
     food: 5
     effects: none
   
-  cake_slice:
+  cake_block:
     hearts: 0
     food: 2
     effects: none
