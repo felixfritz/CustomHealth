@@ -87,6 +87,7 @@ public class EatingEvent implements Listener {
 				
 				foodEaten(p, FoodDataBase.getFoodValue("cake_block"));
 			}
+		} catch(NullPointerException e) {
 		} catch(Exception e) {
 			evt.getPlayer().sendMessage(ChatColor.RED + "Something went wrong. Check the console!");
 			e.printStackTrace();
