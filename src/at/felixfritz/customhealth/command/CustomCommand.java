@@ -67,7 +67,7 @@ public class CustomCommand implements CommandExecutor, TabCompleter {
 			if(args[0].equalsIgnoreCase("get") && sender.hasPermission("customhealth.commands.get")) {
 				
 				//Check, if the player hasn't added any arguments to '/chealth info'
-				if(args.length == 1) {
+				if(args.length == 1 && sender instanceof Player) {
 					
 					Player p = (Player) sender;
 					//Check first, if the item in hand is edible. If so,
