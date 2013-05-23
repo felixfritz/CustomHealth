@@ -36,7 +36,7 @@ public class CustomHealth extends JavaPlugin {
 		 * Make everything ready in the FoodDataBase. It just creates
 		 * an ArrayList of every edible food there
 		 */
-		new FoodDataBase(this.getConfig());
+		new FoodDataBase(plugin.getConfig());
 		
 		/*
 		 * Register the eating event, called as soon as someone eats something, e.g. a fish, carrot or hamburger
@@ -70,6 +70,6 @@ public class CustomHealth extends JavaPlugin {
 	public static void reloadPlugin() {
 		plugin.saveConfig();
 		plugin.reloadConfig();
-		
+		new FoodDataBase(plugin.getConfig());
 	}
 }
