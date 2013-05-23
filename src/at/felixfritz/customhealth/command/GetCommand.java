@@ -22,7 +22,7 @@ public class GetCommand {
 	 */
 	public static void informPlayer(CommandSender sender, Material mat) {
 		
-		//Load the config that contains all the numbers and settings
+		//Get string message from the config
 		FileConfiguration cfg = CustomHealth.getPlugin().getConfig();
 		
 		try {
