@@ -6,9 +6,9 @@ import org.bukkit.plugin.PluginDescriptionFile;
 
 import at.felixfritz.customhealth.CustomHealth;
 
-public class InfoCommand {
+public class CommandPlugin {
 	
-	public static void sendInfo(CommandSender sender) {
+	public static boolean sendInfo(CommandSender sender) {
 		ChatColor p = ChatColor.LIGHT_PURPLE;
 		StringBuilder info = new StringBuilder();
 		PluginDescriptionFile descr = CustomHealth.getPlugin().getDescription();
@@ -25,5 +25,7 @@ public class InfoCommand {
 		info.append(descr.getWebsite());
 		
 		Messenger.sendMessage(info.toString(), sender);
+		
+		return true;
 	}
 }

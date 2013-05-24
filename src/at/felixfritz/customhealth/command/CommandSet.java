@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender;
 
 import at.felixfritz.customhealth.CustomHealth;
 
-public class SetCommand {
+public class CommandSet {
 	
 	/**
 	 * Try to set the hearts and food values for the item

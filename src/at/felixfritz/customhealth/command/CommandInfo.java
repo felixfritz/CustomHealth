@@ -13,7 +13,7 @@ import at.felixfritz.customhealth.foodtypes.FoodValue;
  * Class only used for the static informPlayer method from the CustomCommand class.
  * @author felixfritz
  */
-public class GetCommand {
+public class CommandInfo {
 	
 	/**
 	 * Inform the player about a food

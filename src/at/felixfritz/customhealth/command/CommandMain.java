@@ -21,7 +21,7 @@ import at.felixfritz.customhealth.foodtypes.FoodDataBase;
  * The class that is being called from CustomHealth for the only command available yet: /chealth
  * @author felixfritz
  */
-public class CustomCommand implements CommandExecutor, TabCompleter {
+public class CommandMain implements CommandExecutor, TabCompleter {
 	
 	private ChatColor descr = ChatColor.GRAY;
 	private ChatColor highlight = ChatColor.DARK_GREEN;
@@ -37,7 +37,7 @@ public class CustomCommand implements CommandExecutor, TabCompleter {
 	 * called with 'new CustomCommand' in the CustomHealth class
 	 * @param plugin
 	 */
-	public CustomCommand() {
+	public CommandMain() {
 		this.plugin = CustomHealth.getPlugin();
 	}
 	
@@ -64,126 +64,35 @@ public class CustomCommand implements CommandExecutor, TabCompleter {
 			/*
 			 * The '/chealth get'-command is being called, do something
 			 */
-			if(args[0].equalsIgnoreCase("get") && sender.hasPermission("customhealth.commands.get")) {
-				
-				//Check, if the player hasn't added any arguments to '/chealth info'
-				if(args.length == 1 && sender instanceof Player) {
-					
-					Player p = (Player) sender;
-					//Check first, if the item in hand is edible. If so,
-					//call the informPlayer method in the InfoCommand class.
-					Material m = p.getItemInHand().getType();
-					if(m.isEdible() || m.equals(Material.CAKE_BLOCK))
-						GetCommand.informPlayer(p, m);
-					else
-						Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", m.toString()), p);
-					return true;
-					
-				}
-				
-				//If the player has added an argument, then he'll get the information about the food in the 2. argument
-				if(args.length == 2) {
-					try {
-						String item = (args[1].equalsIgnoreCase("cake_slice")) ? "CAKE_BLOCK" : args[1].toUpperCase();
-						Material type = Material.getMaterial(item.toUpperCase());
-						if(type.isEdible() || type.equals(Material.CAKE_BLOCK))
-							GetCommand.informPlayer(sender, Material.getMaterial(args[1].toUpperCase()));
-						else
-							Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", args[1]), sender);
-					} catch(NullPointerException e) {
-						Messenger.sendMessage(plugin.getConfig().getString("messages.not-a-food-item").replaceAll("<food>", args[1]), sender);
-					}
-					return true;
-				}
-				
-				sendGetHelpMenu();
-				return true;
-			}
+			if(args[0].equalsIgnoreCase("info") && sender.hasPermission("customhealth.commands.info"))
+				return getCommand(args);
 			
 			
 			/*
 			 * A not very smart execution of the set command...
 			 */
-			if(args[0].equalsIgnoreCase("set") && sender.hasPermission("customhealth.commands.set")) {
-				String item = null;
-				Map<String, Integer> values = new HashMap<String, Integer>();
-				
-				/*
-				 * An odd number of arguments: /ch set food 2 (set = args[0], food = args[1], 2 = args[2])
-				 * The sender has to be a player, we will be looking at the item he has in his hands, since he didn't specify it in the command
-				 */
-				if(((args.length % 2) == 1 && args.length > 2) && sender instanceof Player) {
-					Player p = (Player) sender;
-					Material type = p.getItemInHand().getType();
-					
-					//Check if the item in his hand is edible, if not, 
-					if(type.isEdible() || type.equals(Material.CAKE_BLOCK)) {
-						
-						//Yes, the item is edible, set the item string to the itemname and look for the hearts and food values
-						item = type.name();
-						
-						for(int x = 1; x < args.length; x += 2) {
-							try {
-								if("hearts".contains(args[x]))
-									values.put("hearts", Integer.valueOf(args[x + 1]));
-								else if("food".contains(args[x]) || "hunger".contains(args[x]))
-									values.put("food", Integer.valueOf(args[x + 1]));
-								else
-									SetCommand.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
-							} catch(Exception e) {
-								SetCommand.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
-							}
-						}
-					} else {
-						Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", p.getItemInHand().getType().name()), sender);
-					}
-				} else if((args.length % 2) == 0 && args.length > 3) {
-					
-					//Almost the same as above, except that now the user is specifying the item name
-					Material mat = Material.valueOf(args[1].toUpperCase());
-					if(mat.isEdible() || mat.equals(Material.CAKE_BLOCK)) {
-						item = args[1];
-						for(int x = 2; x < args.length; x += 2) {
-							
-							try {
-								if("hearts".contains(args[x]) || "health".contains(args[x]))
-									values.put("hearts", Integer.valueOf(args[x + 1]));
-								else if("food".contains(args[x]) || "hunger".contains(args[x]))
-									values.put("food", Integer.valueOf(args[x + 1]));
-								else
-									SetCommand.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
-							} catch(Exception e) {
-								e.printStackTrace();
-								SetCommand.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
-							}
-						}
-					} else {
-						Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", args[1]), sender);
-					}
-				}
-				
-				if(item == null || values.size() == 0)
-					sendSetHelpMenu();
-				else
-					SetCommand.executeSetCommand(sender, item, values);
-				
-				return true;
-			} //End of the set command
+			if(args[0].equalsIgnoreCase("set") && sender.hasPermission("customhealth.commands.set"))
+				return setCommand(args);
 			
 			
-			if(args[0].equalsIgnoreCase("reset") && sender.hasPermission("customhealth.commands.reset")) {
-				ResetCommand.reset(sender);
-				return true;
-			}
+			/*
+			 * Reset everything to it's original value
+			 */
+			if(args[0].equalsIgnoreCase("reset") && sender.hasPermission("customhealth.commands.reset"))
+				return CommandReset.reset(sender);
 			
 			
-			if(args[0].equalsIgnoreCase("info") && sender.hasPermission("customhealth.commands.info")) {
-				InfoCommand.sendInfo(sender);
-				return true;
-			}
+			/*
+			 * Get information about this plugin
+			 */
+			if(args[0].equalsIgnoreCase("plugin") && sender.hasPermission("customhealth.commands.info"))
+				return CommandPlugin.sendInfo(sender);
 			
 			
-			if(args[0].equalsIgnoreCase("reload")) {
+			/*
+			 * Reload the plugin
+			 */
+			if(args[0].equalsIgnoreCase("reload") && sender.hasPermission("customhealth.commands.reload")) {
 				CustomHealth.reloadPlugin();
 				Messenger.sendMessage(ChatColor.GREEN + "CustomHealth reloaded.", sender);
 				return true;
@@ -214,16 +123,53 @@ public class CustomCommand implements CommandExecutor, TabCompleter {
 			if(sender.hasPermission("customhealth.commands.set"))
 				sender.sendMessage(suffix + "set" + descr + ": Set health/food value for food item.");
 			if(sender.hasPermission("customhealth.commands.get"))
-				sender.sendMessage(suffix + "get" + descr + ": Get health/food value/effects from item.");
+				sender.sendMessage(suffix + "info" + descr + ": Get health/food value/effects from item.");
 			if(sender.hasPermission("customhealth.commands.reload"))
 				sender.sendMessage(suffix + "reload" + descr + ": Reload the config file.");
 			if(sender.hasPermission("customhealth.commands.reset"))
 				sender.sendMessage(suffix + "reset" + descr + ": Reset all food items to their original value.");
 			if(sender.hasPermission("customhealth.commands.info"))
-				sender.sendMessage(suffix + "info" + descr + ": More informations about CustomHealth.");
+				sender.sendMessage(suffix + "plugin" + descr + ": Informations about CustomHealth.");
 		} else {
 			sender.sendMessage(plugin.getConfig().getString("messages.no-permission"));
 		}
+	}
+	
+	
+	private boolean getCommand(String[] args) {
+
+		//Check, if the player hasn't added any arguments to '/chealth info'
+		if(args.length == 1 && sender instanceof Player) {
+			
+			Player p = (Player) sender;
+			//Check first, if the item in hand is edible. If so,
+			//call the informPlayer method in the InfoCommand class.
+			Material m = p.getItemInHand().getType();
+			if(m.isEdible() || m.equals(Material.CAKE_BLOCK))
+				CommandInfo.informPlayer(p, m);
+			else
+				Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", m.toString()), p);
+			return true;
+			
+		}
+		
+		//If the player has added an argument, then he'll get the information about the food in the 2. argument
+		if(args.length == 2) {
+			try {
+				String item = (args[1].equalsIgnoreCase("cake_slice")) ? "CAKE_BLOCK" : args[1].toUpperCase();
+				Material type = Material.getMaterial(item.toUpperCase());
+				if(type.isEdible() || type.equals(Material.CAKE_BLOCK))
+					CommandInfo.informPlayer(sender, Material.getMaterial(args[1].toUpperCase()));
+				else
+					Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", args[1]), sender);
+			} catch(NullPointerException e) {
+				Messenger.sendMessage(plugin.getConfig().getString("messages.not-a-food-item").replaceAll("<food>", args[1]), sender);
+			}
+			return true;
+		}
+		
+		sendGetHelpMenu();
+		return true;
 	}
 	
 	
@@ -241,6 +187,73 @@ public class CustomCommand implements CommandExecutor, TabCompleter {
 		
 	}
 	
+	
+	
+	private boolean setCommand(String[] args) {
+		String item = null;
+		Map<String, Integer> values = new HashMap<String, Integer>();
+		
+		/*
+		 * An odd number of arguments: /ch set food 2 (set = args[0], food = args[1], 2 = args[2])
+		 * The sender has to be a player, we will be looking at the item he has in his hands, since he didn't specify it in the command
+		 */
+		if(((args.length % 2) == 1 && args.length > 2) && sender instanceof Player) {
+			Player p = (Player) sender;
+			Material type = p.getItemInHand().getType();
+			
+			//Check if the item in his hand is edible, if not, 
+			if(type.isEdible() || type.equals(Material.CAKE_BLOCK)) {
+				
+				//Yes, the item is edible, set the item string to the itemname and look for the hearts and food values
+				item = type.name();
+				
+				for(int x = 1; x < args.length; x += 2) {
+					try {
+						if("hearts".contains(args[x]))
+							values.put("hearts", Integer.valueOf(args[x + 1]));
+						else if("food".contains(args[x]) || "hunger".contains(args[x]))
+							values.put("food", Integer.valueOf(args[x + 1]));
+						else
+							CommandSet.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
+					} catch(Exception e) {
+						CommandSet.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
+					}
+				}
+			} else {
+				Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", p.getItemInHand().getType().name()), sender);
+			}
+		} else if((args.length % 2) == 0 && args.length > 3) {
+			
+			//Almost the same as above, except that now the user is specifying the item name
+			Material mat = Material.valueOf(args[1].toUpperCase());
+			if(mat.isEdible() || mat.equals(Material.CAKE_BLOCK)) {
+				item = args[1];
+				for(int x = 2; x < args.length; x += 2) {
+					
+					try {
+						if("hearts".contains(args[x]) || "health".contains(args[x]))
+							values.put("hearts", Integer.valueOf(args[x + 1]));
+						else if("food".contains(args[x]) || "hunger".contains(args[x]))
+							values.put("food", Integer.valueOf(args[x + 1]));
+						else
+							CommandSet.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
+					} catch(Exception e) {
+						e.printStackTrace();
+						CommandSet.sendMessage(sender, false, item, args[x], Integer.valueOf(args[x + 1]));
+					}
+				}
+			} else {
+				Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", args[1]), sender);
+			}
+		}
+		
+		if(item == null || values.size() == 0)
+			sendSetHelpMenu();
+		else
+			CommandSet.executeSetCommand(sender, item, values);
+		
+		return true;
+	}
 	
 	
 	private void sendSetHelpMenu() {
@@ -277,11 +290,11 @@ public class CustomCommand implements CommandExecutor, TabCompleter {
 		if(args.length <= 1) {
 			try {
 				if("get".startsWith(args[0]))
-					list.add("get");
+					list.add("info");
 				if("set".startsWith(args[0]))
 					list.add("set");
 			} catch(Exception e) {
-				list.add("get");
+				list.add("info");
 				list.add("set");
 			}
 		} else if(args.length == 2) {

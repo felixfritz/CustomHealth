@@ -5,13 +5,13 @@ import org.bukkit.command.CommandSender;
 
 import at.felixfritz.customhealth.CustomHealth;
 
-public class ResetCommand {
+public class CommandReset {
 	
 	/**
 	 * Reset the config.yml file in the CustomHealth folder
 	 * @param sender, to whom we'll send the message if everything went well
 	 */
-	public static void reset(CommandSender sender) {
+	public static boolean reset(CommandSender sender) {
 		//Message that everything is being resetted
 		Messenger.sendMessage(ChatColor.GREEN + "Resetting everything...", sender);
 		
@@ -21,5 +21,6 @@ public class ResetCommand {
 		//Tell the user that everything went successful
 		Messenger.sendMessage(ChatColor.GREEN + "Done.", sender);
 		
+		return true;
 	}
 }
