@@ -23,18 +23,9 @@ public class EffectValue {
 	
 	public EffectValue(PotionEffectType effect, double probability, int duration, int strength) {
 		this.effect = effect;
-		
-		this.probability = probability;
-		
-		if(duration >= 0)
-			this.duration = duration;
-		else
-			this.duration = 30;
-		
-		if(strength >= 0)
-			this.strength = strength;
-		else
-			this.strength = 0;
+		setProbability(probability);
+		setDuration(duration);
+		setStrength(strength);
 	}
 	
 	public void setProbability(double probability) {
@@ -46,10 +37,7 @@ public class EffectValue {
 	}
 	
 	public void setDuration(int duration) {
-		if(duration >= 0)
-			this.duration = duration;
-		else
-			this.duration = 30;
+		this.duration = (duration >= 0) ? duration : 30;
 	}
 	
 	public int getDuration() {
@@ -57,10 +45,7 @@ public class EffectValue {
 	}
 	
 	public void setStrength(int strength) {
-		if(strength >= 0)
-			this.strength = strength;
-		else
-			this.strength = 0;
+		this.strength = (strength >= 0) ? strength : 0;
 	}
 	
 	public int getStrength() {
