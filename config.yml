@@ -180,8 +180,3 @@ food:
     hearts: 0
     food: 2
     effects: [19, 100%, 7]
-  
-  steak:
-    hearts: 0
-    food: 8
-    effects: none
