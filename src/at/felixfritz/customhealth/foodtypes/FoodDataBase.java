@@ -7,7 +7,6 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.potion.PotionEffectType;
 
 /**
  * The FoodDataBase: The place where every eatable food is stored and made available for everyone!
@@ -110,7 +109,7 @@ public class FoodDataBase {
 		
 		List<EffectValue> effectValues = new ArrayList<EffectValue>();
 		
-		String effectString;		//Can be either a number or a word (e.g. BLINDNESS)
+		int effectInt;		//Can be either a number or a word (e.g. BLINDNESS)
 		float effectProbability;	//Number between 0% and 100%
 		int effectDuration;			//In seconds
 		int effectStrength;
@@ -119,7 +118,7 @@ public class FoodDataBase {
 		for(String effect : effects) {
 			
 			//Set some values, in case the array doesn't provide us with enough information
-			effectString = "-1";	//If there's no effect given, which will be checked later on, nothing happens
+			effectInt = -1;			//If there's no effect given, which will be checked later on, nothing happens
 			effectProbability = 1;	//Effect probability set to 100%
 			effectDuration = 30;	//Duration set to 30 seconds
 			effectStrength = 0;		//Normal strength
@@ -157,36 +156,22 @@ public class FoodDataBase {
 					e.printStackTrace();
 				}
 			case 1:
-				effectString = tmp[0];
-			}
-			
-			if(effectString.equals("-1"))
-				continue;
-			
-			PotionEffectType effectId = null;
-			try {
-				effectId = PotionEffectType.getById(Integer.valueOf(effectString));
-			} catch(NumberFormatException e) {
 				try {
-					effectId = PotionEffectType.getByName(effectString);
-				} catch(IllegalArgumentException ex) {
-					System.out.println(ChatColor.RED + effectString + " is not registered!");
+					effectInt = Integer.valueOf(effectInt);
+				} catch(NumberFormatException e) {
+					System.out.println(effectInt + " is not a valid number.");
 					continue;
-				} catch(Exception ex) {
-					System.out.println(ChatColor.RED + "Something went wrong. Check the console!");
+				} catch(Exception e) {
+					System.out.println("Something went wrong when using " + tmp[0] + ".");
 					e.printStackTrace();
 					continue;
 				}
-			} catch(IllegalArgumentException e) {
-				System.out.println(ChatColor.RED + effectString + " is not registered!");
-				continue;
-			} catch(Exception e) {
-				System.out.println(ChatColor.RED + "Something went wrong. Check the console!");
-				e.printStackTrace();
-				continue;
 			}
 			
-			effectValues.add(new EffectValue(effectId, effectProbability, effectDuration, effectStrength));
+			if(effectInt < 0 || effectInt > 20)
+				continue;
+			
+			effectValues.add(new EffectValue(effectInt, effectProbability, effectDuration, effectStrength));
 		}
 		
 		if(effectValues.size() == 0)
