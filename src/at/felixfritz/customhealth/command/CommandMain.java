@@ -57,7 +57,7 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			return true;
 		}
 		
-		try {
+		if(args.length > 0) {
 			
 			/*
 			 * The '/chealth get'-command is being called, do something
@@ -89,12 +89,6 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				return true;
 			}
 			
-		} catch(ArrayIndexOutOfBoundsException e){
-			//I know that it was an OutOfBoundsException, so I prepared this. Nothing will happen,
-			//when an index outside of the arraylength is being called
-		} catch(Exception e) {
-			//Okay, now we have a problem. What just happened?
-			e.printStackTrace();
 		}
 		
 		
