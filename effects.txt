@@ -24,4 +24,4 @@
 # Potion 19: Poison
 # Potion 20: Wither
 #
-# Potion 0: XP
+# Potion 0: XP (eg. effects: [0, 100%, 50]   -> 50 is the amount of XP, you want to give)
