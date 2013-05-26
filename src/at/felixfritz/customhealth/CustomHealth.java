@@ -86,7 +86,6 @@ public class CustomHealth extends JavaPlugin {
 	 * Reload the plugin
 	 */
 	public static void reloadPlugin() {
-		plugin.saveConfig();
 		plugin.reloadConfig();
 		new FoodDataBase(plugin.getConfig());
 	}
