@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 import at.felixfritz.customhealth.foodtypes.FoodDataBase;
@@ -136,8 +137,13 @@ public class EatingEvent implements Listener {
 				
 				//Quick check for the probability: if a random number between 0 and 1 is greater than the probability (eg. 0.617 > 0.5), don't do anything
 				if(Math.random() <= effect.getProbability()) {
-					p.removePotionEffect(effect.getEffect());
-					p.addPotionEffect(effect.getEffect().createEffect((effect.getDuration() * 20) + 19, effect.getStrength()));
+					if(effect.getEffect() == 0)
+						p.giveExp(effect.getDuration());
+					else {
+						PotionEffectType type = PotionEffectType.getById(effect.getEffect());
+						p.removePotionEffect(type);
+						p.addPotionEffect(type.createEffect((effect.getDuration() * 20) + 19, effect.getStrength()));
+					}
 				}
 			}
 		}
