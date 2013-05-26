@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import at.felixfritz.customhealth.CustomHealth;
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 import at.felixfritz.customhealth.foodtypes.FoodDataBase;
 import at.felixfritz.customhealth.foodtypes.FoodValue;
@@ -123,6 +124,9 @@ public class EatingEvent implements Listener {
 		 */
 		int health = value.getRegenHearts() + p.getHealth();
 		int food = value.getRegenHunger() + p.getFoodLevel();
+		if(!CustomHealth.isFoodLevelChanging() && food >= 20)
+			food = 19;
+		
 		float saturate = value.getSaturation() + p.getSaturation();
 		
 		p.setHealth(getCorrectValue(health));
