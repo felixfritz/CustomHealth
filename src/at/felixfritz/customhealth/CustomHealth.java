@@ -14,6 +14,7 @@ public class CustomHealth extends JavaPlugin {
 	
 	Logger log = Logger.getLogger("Minecraft");
 	private static CustomHealth plugin;
+	private static boolean isFoodLevelChanging;
 	
 	
 	/**
@@ -23,6 +24,7 @@ public class CustomHealth extends JavaPlugin {
 	public void onEnable() {
 		
 		plugin = this;
+		isFoodLevelChanging = getConfig().getBoolean("settings.change-food-level");
 		
 		/*
 		 * Save all the configuration in plugins/CustomHealth/config.yml
@@ -52,7 +54,7 @@ public class CustomHealth extends JavaPlugin {
 		 * Check, if the two events about changing the food level and changing the health level
 		 * should be enabled or not.
 		 */
-		if(!getConfig().getBoolean("settings.change-food-level"))
+		if(!isFoodLevelChanging)
 			getServer().getPluginManager().registerEvents(new FoodEvent(), plugin);
 		
 		if(!getConfig().getBoolean("settings.regain-health"))
@@ -88,5 +90,14 @@ public class CustomHealth extends JavaPlugin {
 	public static void reloadPlugin() {
 		plugin.reloadConfig();
 		new FoodDataBase(plugin.getConfig());
+	}
+	
+	
+	/**
+	 * Is the food level changing?
+	 * @return true, if that's the case
+	 */
+	public static boolean isFoodLevelChanging() {
+		return isFoodLevelChanging;
 	}
 }
