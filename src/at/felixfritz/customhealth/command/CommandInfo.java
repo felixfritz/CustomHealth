@@ -37,7 +37,7 @@ public class CommandInfo {
 				effects.append("none");
 			} else {
 				for(EffectValue effect : foodValue.getEffects()) {
-					effects.append(effect.getEffect().getName().toLowerCase());
+					effects.append(effect.getName());
 					effects.append(", ");
 				}
 				effects.replace(effects.length() - 2, effects.length(), "");
