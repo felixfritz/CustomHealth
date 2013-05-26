@@ -23,3 +23,5 @@
 # Potion 18: Weakness
 # Potion 19: Poison
 # Potion 20: Wither
+#
+# Potion 0: XP
