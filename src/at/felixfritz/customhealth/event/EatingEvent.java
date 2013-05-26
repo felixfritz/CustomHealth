@@ -31,7 +31,8 @@ public class EatingEvent implements Listener {
 	public void onPlayerConsume(PlayerItemConsumeEvent evt) {
 		
 		Player p = evt.getPlayer();
-		Material m = evt.getItem().getType();
+		ItemStack i = evt.getItem();
+		Material m = i.getType();
 		
 		//If the player has an empty glass bottle in his hand, he probably drank a potion -> don't cancel those effects
 		if(m.equals(Material.POTION))
@@ -65,7 +66,10 @@ public class EatingEvent implements Listener {
 			/*
 			 * Check the food, the player has eaten
 			 */
-			FoodValue value = FoodDataBase.getFoodValue(m.name());
+			System.out.println(i.getData().getData());
+			String foodName = (m == Material.GOLDEN_APPLE && i.getData().getData() == 1) ? "enchanted_golden_apple" : m.name();
+			FoodValue value = FoodDataBase.getFoodValue(foodName);
+			
 			foodEaten(p, value);
 			
 			return;
@@ -118,10 +122,11 @@ public class EatingEvent implements Listener {
 		 */
 		int health = value.getRegenHearts() + p.getHealth();
 		int food = value.getRegenHunger() + p.getFoodLevel();
+		float saturate = value.getSaturation() + p.getSaturation();
 		
 		p.setHealth(getCorrectValue(health));
 		p.setFoodLevel(getCorrectValue(food));
-		p.setSaturation(5F);
+		p.setSaturation(saturate);
 		
 		//Check, if there are any effects on the food
 		if(value.getEffects() != null && value.getEffects().size() != 0) {
