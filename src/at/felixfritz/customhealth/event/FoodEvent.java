@@ -6,11 +6,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 
-/**
- * This listener is being called when change-food-level is set to false<br>
- * -> Food level won't change unless you're lower on health an you eat something
- * @author felixfritz
- */
 public class FoodEvent implements Listener {
 	
 	@EventHandler (priority = EventPriority.HIGH)
@@ -22,5 +17,4 @@ public class FoodEvent implements Listener {
 		p.setFoodLevel(19);
 		p.setSaturation(10);
 	}
-	
 }
