@@ -38,6 +38,7 @@ public class FoodDataBase {
 		}
 		
 		add("cake_block");
+		add("enchanted_golden_apple");
 	}
 	
 	
@@ -47,16 +48,24 @@ public class FoodDataBase {
 	 */
 	private void add(String food) {
 		
+		food = food.toLowerCase();
+		String path = "food." + food;
+		
 		//First check, if the food has any effects yet
-		String effects = cfg.getString("food." + food.toString().toLowerCase() + ".effects");
-		List<EffectValue> values = null;
+		String effects = cfg.getString(path + ".effects");
+		List<EffectValue> effectList = null;
 		if(effects != null && !effects.equalsIgnoreCase("none")) {
-			values = new ArrayList<EffectValue>();
-			values = getPotionEffects(effects.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "").split(";"));
+			effectList = new ArrayList<EffectValue>();
+			effectList = getPotionEffects(effects.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "").split(";"));
 		}
 		
-		foods.add(new FoodValue(Material.valueOf(food.equalsIgnoreCase("cake_slice") ? "CAKE_BLOCK" : food.toUpperCase()), 
-				cfg.getInt("food." + food.toString().toLowerCase() + ".hearts"), cfg.getInt("food." + food.toString().toLowerCase() + ".food"), values));
+		FoodValue value = new FoodValue(food);
+		value.setRegenHearts(cfg.getInt(path + ".hearts"));
+		value.setRegenHunger(cfg.getInt(path + ".food"));
+		value.setSaturation(Float.valueOf(cfg.getString(path + ".saturation")));
+		value.setEffects(effectList);
+		
+		foods.add(value);
 	}
 	
 	
@@ -110,7 +119,7 @@ public class FoodDataBase {
 		for(String effect : effects) {
 			
 			//Set some values, in case the array doesn't provide us with enough information
-			effectString = "0";		//If there's no effect given, which will be checked later on, nothing happens
+			effectString = "-1";	//If there's no effect given, which will be checked later on, nothing happens
 			effectProbability = 1;	//Effect probability set to 100%
 			effectDuration = 30;	//Duration set to 30 seconds
 			effectStrength = 0;		//Normal strength
@@ -119,7 +128,7 @@ public class FoodDataBase {
 			switch(tmp.length) {
 			case 4:
 				try {
-					effectStrength = Integer.valueOf(tmp[3]);
+					effectStrength = Integer.valueOf(tmp[3]) - 1;
 				} catch(NumberFormatException e) {
 					System.out.println(ChatColor.RED + tmp[3] + " is not an integer!");
 					continue;
@@ -151,7 +160,7 @@ public class FoodDataBase {
 				effectString = tmp[0];
 			}
 			
-			if(effectString.equalsIgnoreCase("0"))
+			if(effectString.equals("-1"))
 				continue;
 			
 			PotionEffectType effectId = null;
