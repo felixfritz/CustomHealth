@@ -13,42 +13,52 @@ import org.bukkit.Material;
  */
 public class FoodValue {
 	
-	private String foodName;
-	private int regenHearts;
-	private int regenHunger;
-	private float saturation;
-	private List<EffectValue> effects;
+	private String name;
+	private int regenHearts = 0;
+	private int regenHunger = 0;
+	private float saturation = 0;
+	private List<EffectValue> effects = new ArrayList<EffectValue>();
 	
 	/**
 	 * Set it to a specific material. It will regenerate 0 hearts and 0 hunger bars!
 	 * @param foodName
 	 */
 	public FoodValue(String foodName) {
-		new FoodValue(foodName, 0, 0, 0, new ArrayList<EffectValue>());
+		setName(foodName);
 	}
 	
 	public FoodValue(String foodName, int regenHearts, int regenHunger) {
-		new FoodValue(foodName, regenHearts, regenHunger, 0, new ArrayList<EffectValue>());
+		setName(foodName);
+		setRegenHearts(regenHearts);
+		setRegenHunger(regenHunger);
 	}
 	
 	public FoodValue(String foodName, int regenHearts, int regenHunger, float saturation) {
-		new FoodValue(foodName, regenHearts, regenHunger, saturation, new ArrayList<EffectValue>());
+		setName(foodName);
+		setRegenHearts(regenHearts);
+		setRegenHunger(regenHunger);
+		setSaturation(saturation);
 	}
 	
 	public FoodValue(String foodName, int regenHearts, int regenHunger, float saturation, List<EffectValue> effects) {
-		this.foodName = foodName;
-		this.regenHearts = regenHearts;
-		this.regenHunger = regenHunger;
-		this.effects = effects;
+		setName(foodName);
+		setRegenHearts(regenHearts);
+		setRegenHunger(regenHunger);
+		setSaturation(saturation);
+		setEffects(effects);
 	}
 	
+	
+	private void setName(String foodName) {
+		this.name = foodName.toUpperCase();
+	}
 	
 	/**
 	 * Get the name of the food
 	 * @return foodName
 	 */
 	public String getName() {
-		return foodName;
+		return this.name;
 	}
 	
 	
@@ -57,7 +67,7 @@ public class FoodValue {
 	 * @return material
 	 */
 	public Material getFood() {
-		return Material.valueOf((foodName.equalsIgnoreCase("enchanted_golden_apple")) ? "GOLDEN_APPLE" : foodName);
+		return Material.valueOf((name.equalsIgnoreCase("enchanted_golden_apple")) ? "GOLDEN_APPLE" : name);
 	}
 	
 	
@@ -161,5 +171,9 @@ public class FoodValue {
 			}
 		}
 		return false;
+	}
+	
+	public String toString() {
+		return name + ", " + regenHearts + " hearts, " + regenHunger + " hunger, " + saturation + " saturation.";
 	}
 }
