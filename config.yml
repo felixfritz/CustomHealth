@@ -24,15 +24,9 @@ messages:
 #    <food> - food item
 #    <hearts> - hearts value
 #    <hunger> - hunger value
+#    <saturation> - saturation level
 #    <effects> - effects
-  food-info: "&8Food: &c<food><n>&8Hearts: &c<hearts><n>&8Hunger: &c<hunger><n>&8Effects: &c<effects>"
-  
-# variables: 
-#   <food> - food item
-#   <type> - either hearts or hunger
-#   <amount> - number used for type
-  set-successful: "&8Set &c<food> <type> &8value to &c<amount>&8!"
-  set-failed: "&4Could not set &c<food> <type> &4to &c<amount>&8!"
+  food-info: "&8Food: &c<food><n>&8Hearts: &c<hearts><n>&8Hunger: &c<hunger><n>&8Saturation: &c<saturation><n>&8Effects: &c<effects>"
 
 
 
