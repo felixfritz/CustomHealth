@@ -1,7 +1,6 @@
 package at.felixfritz.customhealth.foodtypes;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.bukkit.ChatColor;
@@ -25,7 +24,7 @@ public class FoodDataBase {
 	 * @param cfg
 	 */
 	public FoodDataBase(FileConfiguration cfg) {
-		foods = new LinkedList<FoodValue>();
+		foods = new ArrayList<FoodValue>();
 		this.cfg = cfg;
 		
 		/*
@@ -49,19 +48,20 @@ public class FoodDataBase {
 		
 		food = food.toLowerCase();
 		String path = "food." + food;
+		int regenHearts = cfg.getInt(path + ".hearts");
+		int regenHunger = cfg.getInt(path + ".food");
+		float saturation = (float) cfg.getDouble(path + ".saturation");
 		
-		//First check, if the food has any effects yet
+		//Check, if the food has any effects yet
 		String effects = cfg.getString(path + ".effects");
 		List<EffectValue> effectList = null;
-		if(effects != null && !effects.equalsIgnoreCase("none")) {
-			effectList = new ArrayList<EffectValue>();
+		if(effects != null && !effects.equalsIgnoreCase("none"))
 			effectList = getPotionEffects(effects.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "").split(";"));
-		}
 		
 		FoodValue value = new FoodValue(food);
-		value.setRegenHearts(cfg.getInt(path + ".hearts"));
-		value.setRegenHunger(cfg.getInt(path + ".food"));
-		value.setSaturation(Float.valueOf(cfg.getString(path + ".saturation")));
+		value.setRegenHearts(regenHearts);
+		value.setRegenHunger(regenHunger);
+		value.setSaturation(saturation);
 		value.setEffects(effectList);
 		
 		foods.add(value);
@@ -89,7 +89,6 @@ public class FoodDataBase {
 	 * @return food value
 	 */
 	public static FoodValue getFoodValue(String name) {
-		
 		for(int x = 0; x < foods.size(); x++) {
 			if(foods.get(x).getName().equalsIgnoreCase(name))
 				return foods.get(x);
@@ -157,7 +156,7 @@ public class FoodDataBase {
 				}
 			case 1:
 				try {
-					effectInt = Integer.valueOf(effectInt);
+					effectInt = Integer.valueOf(tmp[0]);
 				} catch(NumberFormatException e) {
 					System.out.println(effectInt + " is not a valid number.");
 					continue;
