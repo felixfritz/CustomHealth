@@ -1,13 +1,11 @@
 package at.felixfritz.customhealth.command;
 
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 import at.felixfritz.customhealth.CustomHealth;
-import at.felixfritz.customhealth.foodtypes.EffectValue;
-import at.felixfritz.customhealth.foodtypes.FoodDataBase;
-import at.felixfritz.customhealth.foodtypes.FoodValue;
+import at.felixfritz.customhealth.foodtypes.*;
 
 /**
  * Class only used for the static informPlayer method from the CustomCommand class.
@@ -18,19 +16,21 @@ public class CommandInfo {
 	/**
 	 * Inform the player about a food
 	 * @param sender
-	 * @param mat
+	 * @param stack
 	 */
-	public static void informPlayer(CommandSender sender, Material mat) {
+	public static void informPlayer(CommandSender sender, ItemStack stack) {
 		
 		//Get string message from the config
 		FileConfiguration cfg = CustomHealth.getPlugin().getConfig();
 		
 		try {
+			String name = (stack.getData().getData() == 1) ? "ENCHANTED_GOLDEN_APPLE" : stack.getType().name();
 			//Get food from the material. It must be edible, the CustomCommand class automatically checks, if it's edible
-			FoodValue foodValue = FoodDataBase.getFoodValue(mat.name());
+			FoodValue foodValue = FoodDataBase.getFoodValue(name);
 			
-			int regenHearts = foodValue.getRegenHearts();
-			int regenFood = foodValue.getRegenHunger();
+			String regenHearts = String.valueOf(foodValue.getRegenHearts());
+			String regenFood = String.valueOf(foodValue.getRegenHunger());
+			String saturation = String.valueOf(foodValue.getSaturation());
 			StringBuilder effects = new StringBuilder();
 			
 			if(foodValue.getEffects() == null) {
@@ -45,7 +45,7 @@ public class CommandInfo {
 			
 			//Inform the player over the Messenger class, replace all sorts of shortcuts with the actual parameter
 			Messenger.sendMessage(cfg.getString("messages.food-info").replaceAll("<food>", foodValue.getName()).
-					replaceAll("<hearts>", String.valueOf(regenHearts)).replaceAll("<hunger>", String.valueOf(regenFood)).
+					replaceAll("<hearts>", regenHearts).replaceAll("<hunger>", regenFood).replaceAll("<saturation>", saturation).
 					replaceAll("<effects>", effects.toString()), sender);
 		} catch(Exception e) {
 			e.printStackTrace();
