@@ -24,7 +24,6 @@ public class CustomHealth extends JavaPlugin {
 	public void onEnable() {
 		
 		plugin = this;
-		isFoodLevelChanging = getConfig().getBoolean("settings.change-food-level");
 		
 		/*
 		 * Save all the configuration in plugins/CustomHealth/config.yml
@@ -54,6 +53,7 @@ public class CustomHealth extends JavaPlugin {
 		 * Check, if the two events about changing the food level and changing the health level
 		 * should be enabled or not.
 		 */
+		isFoodLevelChanging = getConfig().getBoolean("settings.change-food-level");
 		if(!isFoodLevelChanging)
 			getServer().getPluginManager().registerEvents(new FoodEvent(), plugin);
 		
@@ -100,4 +100,5 @@ public class CustomHealth extends JavaPlugin {
 	public static boolean isFoodLevelChanging() {
 		return isFoodLevelChanging;
 	}
+	
 }
