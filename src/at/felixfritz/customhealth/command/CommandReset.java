@@ -17,6 +17,7 @@ public class CommandReset {
 		
 		//Overwrite the config.yml file in the CustomHealth folder
 		CustomHealth.getPlugin().saveResource("config.yml", /* Overwrite it? */ true);
+		CustomHealth.reloadPlugin();
 		
 		//Tell the user that everything went successful
 		Messenger.sendMessage(ChatColor.GREEN + "Done.", sender);
