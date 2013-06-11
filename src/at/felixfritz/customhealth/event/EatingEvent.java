@@ -1,5 +1,7 @@
 package at.felixfritz.customhealth.event;
 
+import java.util.List;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -16,6 +18,7 @@ import at.felixfritz.customhealth.CustomHealth;
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 import at.felixfritz.customhealth.foodtypes.FoodDataBase;
 import at.felixfritz.customhealth.foodtypes.FoodValue;
+import at.felixfritz.customhealth.util.Converter;
 
 /**
  * Most important class!<br>
@@ -68,9 +71,8 @@ public class EatingEvent implements Listener {
 			/*
 			 * Check the food, the player has eaten
 			 */
-			System.out.println(i.getData().getData());
 			String foodName = (m == Material.GOLDEN_APPLE && i.getData().getData() == 1) ? "enchanted_golden_apple" : m.name();
-			FoodValue value = FoodDataBase.getFoodValue(foodName);
+			FoodValue value = FoodDataBase.getFoodValue(p.getWorld(), foodName);
 			
 			foodEaten(p, value);
 			
@@ -91,7 +93,7 @@ public class EatingEvent implements Listener {
 				Player p = evt.getPlayer();
 				p.setFoodLevel(getCorrectValue(p.getFoodLevel() - 2));
 				
-				foodEaten(p, FoodDataBase.getFoodValue("cake_block"));
+				foodEaten(p, FoodDataBase.getFoodValue(p.getWorld(), "cake_block"));
 			}
 		} catch(NullPointerException e) {
 		} catch(Exception e) {
@@ -122,15 +124,31 @@ public class EatingEvent implements Listener {
 		 * Set hunger and health of player.
 		 * Make sure it's also between 0 and 20, because it throws an error if it's above or below
 		 */
-		int health = value.getRegenHearts() + p.getHealth();
-		int food = value.getRegenHunger() + p.getFoodLevel();
-		if(!CustomHealth.isFoodLevelChanging() && food >= 20)
-			food = 19;
 		
-		float saturate = value.getSaturation() + p.getSaturation();
+		int rHearts = value.getRegenHearts().getNum();
+		int rHunger = value.getRegenHunger().getNum();
+		ItemStack item = p.getItemInHand();
+		
+		if(item.getItemMeta().hasLore()) {
+			List<String> lore = item.getItemMeta().getLore();
+			if(lore.size() == 2) {
+				if(lore.get(0).endsWith(" hearts") && lore.get(1).endsWith(" food bars")) {
+					try {
+						FoodValue newValue = Converter.loreToFoodValue(lore);
+						rHearts = newValue.getRegenHearts().getNum();
+						rHunger = newValue.getRegenHunger().getNum();
+					} catch(Exception e) {e.printStackTrace();}
+				}
+			}
+		}
+		
+		int health = rHearts + p.getHealth();
+		int food = rHunger + p.getFoodLevel();
+		float saturate = value.getSaturation().getNum() + p.getSaturation();
 		
 		p.setHealth(getCorrectValue(health));
-		p.setFoodLevel(getCorrectValue(food));
+		p.setFoodLevel((!CustomHealth.isFoodLevelChanging(p.getWorld()) && food >= CustomHealth.getMaxFoodLevel(p.getWorld())) ? 
+				CustomHealth.getMaxFoodLevel(p.getWorld()) : getCorrectValue(food));
 		p.setSaturation(saturate);
 		
 		//Check, if there are any effects on the food
@@ -140,13 +158,13 @@ public class EatingEvent implements Listener {
 			for(EffectValue effect : value.getEffects()) {
 				
 				//Quick check for the probability: if a random number between 0 and 1 is greater than the probability (eg. 0.617 > 0.5), don't do anything
-				if(Math.random() <= effect.getProbability()) {
+				if(Math.random() <= effect.getProbability().getNum()) {
 					if(effect.getEffect() == 0)
-						p.giveExp(effect.getDuration());
+						p.giveExp(effect.getDuration().getNum());
 					else {
 						PotionEffectType type = PotionEffectType.getById(effect.getEffect());
 						p.removePotionEffect(type);
-						p.addPotionEffect(type.createEffect((effect.getDuration() * 20) + 19, effect.getStrength()));
+						p.addPotionEffect(type.createEffect((effect.getDuration().getNum() * 20) + 19, effect.getStrength().getNum()));
 					}
 				}
 			}
