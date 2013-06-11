@@ -1,0 +1,173 @@
+settings:
+
+# Do you want the player to regain health when saturated?
+  regain-health: true
+
+# Do you want to change the food level to change for a player?
+# This can be set to true (by default), or false, if you don't want the player to lose any food levels (still can regain it thorugh eating, though)
+  change-food-level: true
+  max-food-level: 19
+
+
+
+
+# 
+# If you don't want to have any effects on a food, type in none
+#
+# The effects have to be structured like this:
+# [potiontype, probability, duration, strength]
+# You don't have to include all parameters, but the order is crucial:
+# [] -> Nothing happens
+# [1] -> Speed potion, 100% chance, 30 sec, strength 1
+# [2, 78%] -> Slowness potion, 78% chance, 30 sec, strength 1
+# [3, 78%, 10] -> Potion of haste, 78% chance, 10 sec, strength 1
+# [4, 78%, 10, 3] -> Slow Digging potion, 78% chance, 10 sec, strength 3
+#
+# You can also add multiple effects using the semicolon:
+# [10; 12, 14%; 17, 100%, 10, 5] -> Regeneration effect for 30 sec, a 14% chance of getting fire resistance for 30 sec and Hunger for 10 sec with the strength of 5
+# 
+
+food:
+  apple:
+    hearts: 0
+    food: 4
+    saturation: 2.4
+    effects: none
+  
+  baked_potato:
+    hearts: 0
+    food: 6
+    saturation: 7.2
+    effects: none
+  
+  bread:
+    hearts: 0
+    food: 5
+    saturation: 6
+    effects: none
+  
+  cake_block:
+    hearts: 0
+    food: 2
+    saturation: 0.4
+    effects: none
+  
+  carrot_item:
+    hearts: 0
+    food: 4
+    saturation: 4.8
+    effects: none
+  
+  cooked_beef:
+    hearts: 0
+    food: 8
+    saturation: 12.8
+    effects: none
+  
+  cooked_chicken:
+    hearts: 0
+    food: 6
+    saturation: 7.2
+    effects: none
+  
+  cooked_fish:
+    hearts: 0
+    food: 5
+    saturation: 6
+    effects: none
+  
+  cookie:
+    hearts: 0
+    food: 2
+    saturation: 0.4
+    effects: none
+  
+  enchanted_golden_apple:
+    hearts: 0
+    food: 4
+    saturation: 9.6
+    effects: [10, 100%, 30, 4; 11, 100%, 320; 12, 100%, 320]
+  
+  golden_apple:
+    hearts: 0
+    food: 4
+    saturation: 9.6
+    effects: [10, 100%, 5]
+  
+  golden_carrot:
+    hearts: 0
+    food: 6
+    saturation: 14.4
+    effects: none
+  
+  grilled_pork:
+    hearts: 0
+    food: 8
+    saturation: 12.8
+    effects: none
+  
+  melon:
+    hearts: 0
+    food: 2
+    saturation: 1.2
+    effects: none
+  
+  mushroom_soup:
+    hearts: 0
+    food: 6
+    saturation: 7.2
+    effects: none
+  
+  poisonous_potato:
+    hearts: 0
+    food: 2
+    saturation: 1.2
+    effects: [19, 60%, 7]
+  
+  pork:
+    hearts: 0
+    food: 3
+    saturation: 1.8
+    effects: none
+  
+  potato_item:
+    hearts: 0
+    food: 1
+    saturation: 0.6
+    effects: none
+  
+  pumpkin_pie:
+    hearts: 0
+    food: 8
+    saturation: 4.8
+    effects: none
+  
+  raw_beef:
+    hearts: 0
+    food: 3
+    saturation: 1.8
+    effects: none
+  
+  raw_chicken:
+    hearts: 0
+    food: 2
+    saturation: 1.2
+    effects: [17, 30%]
+  
+  raw_fish:
+    hearts: 0
+    food: 2
+    saturation: 1.2
+    effects: none
+  
+  rotten_flesh:
+    hearts: 0
+    food: 4
+    saturation: 0.8
+    effects: [17, 80%]
+  
+  spider_eye:
+    hearts: 0
+    food: 2
+    saturation: 3.2
+    effects: [19, 100%, 7]
