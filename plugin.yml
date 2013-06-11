@@ -1,6 +1,6 @@
 name: CustomHealth
 main: at.felixfritz.customhealth.CustomHealth
-version: 0.3 Beta
+version: 0.5 Beta
 author: felixfritz
 website: http://dev.bukkit.org/server-mods/custom-health/
 
@@ -15,6 +15,7 @@ permissions:
     default: op
     children:
       customhealth.commands.info: true
+      customhealth.commands.set: true
       customhealth.commands.plugin: true
       customhealth.commands.reset: true
       customhealth.commands.reload: true
@@ -23,8 +24,12 @@ permissions:
     description: Get health/food/effect value of a food item.
     default: op
   
-  customhealth.commands.plugin:
+  customhealth.commands.set:
     description: Set health/food/effect value of a food item.
+    default: op
+  
+  customhealth.commands.plugin:
+    description: Get informations about the plugin.
     default: op
   
   customhealth.commands.reset:
