@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -15,6 +16,8 @@ import org.bukkit.permissions.Permission;
 
 import at.felixfritz.customhealth.CustomHealth;
 import at.felixfritz.customhealth.foodtypes.FoodDataBase;
+import at.felixfritz.customhealth.foodtypes.FoodValue;
+import at.felixfritz.customhealth.util.Converter;
 
 /**
  * The class that is being called from CustomHealth for the only command available yet: /chealth
@@ -63,8 +66,16 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			/*
 			 * The '/chealth get'-command is being called, do something
 			 */
-			if(args[0].equalsIgnoreCase("info") && sender.hasPermission("customhealth.commands.info"))
+			if((args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("get")) && sender.hasPermission("customhealth.commands.info") && 
+					!(sender instanceof ConsoleCommandSender))
 				return getCommand(args);
+			
+			
+			/*
+			 * Set command
+			 */
+			if(args[0].equalsIgnoreCase("set") && sender.hasPermission("customhealth.commands.set") && !(sender instanceof ConsoleCommandSender))
+				return setCommand(args);
 			
 			
 			/*
@@ -105,8 +116,10 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 	 */
 	private void sendHelpMenu() {
 		sender.sendMessage(descr + "-----------[ " + highlight + plugin.getDescription().getName() + descr + " ]-----------");
-		if(sender.hasPermission("customhealth.commands.info"))
+		if(sender.hasPermission("customhealth.commands.info") && !(sender instanceof ConsoleCommandSender))
 			sender.sendMessage(suffix + "info" + descr + ": Get health/food value/effects from item.");
+		if(sender.hasPermission("customhealth.commands.set") && !(sender instanceof ConsoleCommandSender))
+			sender.sendMessage(suffix + "set" + descr + ": Set value for item in hand.");
 		if(sender.hasPermission("customhealth.commands.reload"))
 			sender.sendMessage(suffix + "reload" + descr + ": Reload the config file.");
 		if(sender.hasPermission("customhealth.commands.reset"))
@@ -123,11 +136,11 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 	 * @return true... always...
 	 */
 	private boolean getCommand(String[] args) {
-
+		
+		Player p = (Player) sender;
 		//Check, if the player hasn't added any arguments to '/chealth info'
 		if(args.length == 1 && sender instanceof Player) {
 			
-			Player p = (Player) sender;
 			//Check first, if the item in hand is edible. If so,
 			//call the informPlayer method in the InfoCommand class.
 			ItemStack s = p.getItemInHand();
@@ -143,15 +156,11 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		//If the player has added an argument, then he'll get the information about the food in the 2. argument
 		if(args.length == 2) {
 			try {
-				ItemStack stack = new ItemStack((args[1].equalsIgnoreCase("enchanted_golden_apple")) ? Material.valueOf("GOLDEN_APPLE") : 
-					Material.valueOf(args[1].toUpperCase()));
-				
-				if(args[1].equalsIgnoreCase("enchanted_golden_apple"))
-					stack.getData().setData((byte) 1);
+				ItemStack stack = Converter.stringToItemStack(args[1]);
 				
 				Material type = stack.getType();
 				if(type.isEdible() || type.equals(Material.CAKE_BLOCK))
-					CommandInfo.informPlayer(sender, stack);
+					CommandInfo.informPlayer(p, stack);
 				else
 					Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", args[1]), sender);
 			} catch(NullPointerException e) {
@@ -174,6 +183,62 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		sender.sendMessage(suffix + "info [food]" + descr + ": Get the values about [food].");
 	
 	}
+	
+	
+	/**
+	 * Set values of the food item
+	 * @param args
+	 * @return true... always...
+	 */
+	private boolean setCommand(String[] args) {
+		
+		if(args.length > 2 && (args.length % 2) == 1) {
+			try {
+				Player p = (Player) sender;
+				
+				ItemStack stack = p.getItemInHand();
+				FoodValue value = FoodDataBase.getFoodValue(p.getWorld(), Converter.itemStackToString(stack));
+				
+				String hearts = value.getRegenHearts().toString();
+				String hunger = value.getRegenHunger().toString();
+				
+				if(stack.getItemMeta().hasLore()) {
+					List<String> list = stack.getItemMeta().getLore();
+					for(String s : list) {
+						if(s.endsWith(" hearts"))
+							hearts = s.substring(2, s.length() - 7);
+						else if(s.endsWith(" food bars"))
+							hunger = s.substring(2, s.length() - 10);
+					}
+				}
+				
+				for(int x = 1; x < args.length; x += 2) {
+					if("hearts".contains(args[x].toLowerCase()) || "health".contains(args[x].toLowerCase()))
+						hearts = args[x + 1];
+					else if("hunger".contains(args[x].toLowerCase()) || "food".contains(args[x].toLowerCase()))
+						hunger = args[x + 1];
+					else
+						sender.sendMessage(ChatColor.RED + "Invalid modifier " + args[x] + ". Can only be \"hearts\" or \"hunger\".");
+				}
+				CommandSet.setCommandExecuted(sender, hearts, hunger);
+				return true;
+			} catch(Exception e) {
+				sender.sendMessage(ChatColor.RED + "Error: " + e.getLocalizedMessage());
+			}
+		}
+		
+		sendSetHelpMenu();
+		return true;
+	}
+	
+	
+	private void sendSetHelpMenu() {
+		sender.sendMessage(descr + "-----------[ " + highlight + plugin.getDescription().getName() + " /set" + descr + " ]-----------");
+		sender.sendMessage(suffix + "set hearts <amount>" + descr + ": Hearts regenerated.");
+		sender.sendMessage(suffix + "set food <amount>" + descr + ": Food bars regenerated.");
+		sender.sendMessage(suffix + "set hearts <amount> food <amount>" + descr + ": Combination of both.");
+	}
+	
 	
 	
 	/**
@@ -201,6 +266,8 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		if(args.length <= 1) {
 			if(("get".startsWith(args[0].toLowerCase()) || "info".startsWith(args[0].toLowerCase())) && sender.hasPermission("customhealth.commands.info"))
 				list.add("info");
+			if(("set".startsWith(args[0].toUpperCase())) && sender.hasPermission("customhealth.commands.set"))
+				list.add("set");
 			if("reload".startsWith(args[0].toLowerCase()) && sender.hasPermission("customhealth.commands.reload"))
 				list.add("reload");
 			if("reset".startsWith(args[0].toLowerCase()) && sender.hasPermission("customhealth.commands.reset"))
@@ -208,11 +275,17 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			if("plugin".startsWith(args[0].toLowerCase()) && sender.hasPermission("customhealth.commands.plugin"))
 				list.add("plugin");
 			
-		} else if(args.length == 2) {
+		} else if(args.length == 2 && ("get".startsWith(args[0].toLowerCase()) || "info".startsWith(args[0].toLowerCase())) && sender.hasPermission("customhealth.commands.info")) {
 			for(String food : FoodDataBase.getFoodNames()) {
 				if(food.toUpperCase().startsWith(args[1].toUpperCase()))
 					list.add(food);
 			}
+		} else if("set".startsWith(args[0].toLowerCase()) && sender.hasPermission("customhealth.commands.set")) {
+			int index = args.length - 1;
+			if("hearts".startsWith(args[index].toLowerCase()) || "health".startsWith(args[index].toLowerCase()))
+				list.add("hearts");
+			if("food".startsWith(args[index].toLowerCase()) || "hunger".startsWith(args[index].toLowerCase()))
+				list.add("food");
 		}
 		
 		return list;
