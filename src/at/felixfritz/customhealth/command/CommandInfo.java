@@ -1,11 +1,14 @@
 package at.felixfritz.customhealth.command;
 
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import at.felixfritz.customhealth.CustomHealth;
-import at.felixfritz.customhealth.foodtypes.*;
+import at.felixfritz.customhealth.foodtypes.EffectValue;
+import at.felixfritz.customhealth.foodtypes.FoodDataBase;
+import at.felixfritz.customhealth.foodtypes.FoodValue;
+import at.felixfritz.customhealth.util.Converter;
 
 /**
  * Class only used for the static informPlayer method from the CustomCommand class.
@@ -18,15 +21,15 @@ public class CommandInfo {
 	 * @param sender
 	 * @param stack
 	 */
-	public static void informPlayer(CommandSender sender, ItemStack stack) {
+	public static void informPlayer(Player sender, ItemStack stack) {
 		
 		//Get string message from the config
 		FileConfiguration cfg = CustomHealth.getPlugin().getConfig();
 		
 		try {
-			String name = (stack.getData().getData() == 1) ? "ENCHANTED_GOLDEN_APPLE" : stack.getType().name();
+			String name = Converter.itemStackToString(stack);
 			//Get food from the material. It must be edible, the CustomCommand class automatically checks, if it's edible
-			FoodValue foodValue = FoodDataBase.getFoodValue(name);
+			FoodValue foodValue = FoodDataBase.getFoodValue(sender.getWorld(), name);
 			
 			String regenHearts = String.valueOf(foodValue.getRegenHearts());
 			String regenFood = String.valueOf(foodValue.getRegenHunger());
