@@ -15,17 +15,17 @@ messages:
   
   no-permission: "&4You don't have the permission."
   
-# variables:
-#    <food> - food name
+  # variables:
+  #    <food> - food name
   item-not-edible: "&c<food> &4is not edible."
   not-a-food-item: "&c<food> &4is not a food item."
   
-# variables:
-#    <food> - food item
-#    <hearts> - hearts value
-#    <hunger> - hunger value
-#    <saturation> - saturation level
-#    <effects> - effects
+  # variables:
+  #    <food> - food item
+  #    <hearts> - hearts value
+  #    <hunger> - hunger value
+  #    <saturation> - saturation level
+  #    <effects> - effects
   food-info: "&8Food: &c<food><n>&8Hearts: &c<hearts><n>&8Hunger: &c<hunger><n>&8Saturation: &c<saturation><n>&8Effects: &c<effects>"
 
 
@@ -39,6 +39,7 @@ settings:
 # Do you want to change the food level to change for a player?
 # This can be set to true (by default), or false, if you don't want the player to lose any food levels (still can regain it thorugh eating, though)
   change-food-level: true
+  max-food-level: 19
 
 
 
