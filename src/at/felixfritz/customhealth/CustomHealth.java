@@ -1,7 +1,14 @@
 package at.felixfritz.customhealth;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import at.felixfritz.customhealth.command.CommandMain;
@@ -14,7 +21,11 @@ public class CustomHealth extends JavaPlugin {
 	
 	Logger log = Logger.getLogger("Minecraft");
 	private static CustomHealth plugin;
-	private static boolean isFoodLevelChanging;
+	private static String resourcePath;
+	private static String errorPrefix = "[CustomHealth] [ERROR] ";
+	
+	private static Map<World, Integer> foodChanger;
+	private static List<World> heartChanger;
 	
 	
 	/**
@@ -24,6 +35,7 @@ public class CustomHealth extends JavaPlugin {
 	public void onEnable() {
 		
 		plugin = this;
+		resourcePath = "plugins/" + getDescription().getName() + "/";
 		
 		/*
 		 * Save all the configuration in plugins/CustomHealth/config.yml
@@ -53,15 +65,26 @@ public class CustomHealth extends JavaPlugin {
 		 * Check, if the two events about changing the food level and changing the health level
 		 * should be enabled or not.
 		 */
-		isFoodLevelChanging = getConfig().getBoolean("settings.change-food-level");
-		if(!isFoodLevelChanging)
-			getServer().getPluginManager().registerEvents(new FoodEvent(), plugin);
+		foodChanger = new HashMap<World, Integer>();
+		loadWorldConfig();
 		
-		if(!getConfig().getBoolean("settings.regain-health"))
-			getServer().getPluginManager().registerEvents(new HealthEvent(), plugin);
+		getServer().getPluginManager().registerEvents(new FoodEvent(), plugin);
+		getServer().getPluginManager().registerEvents(new HealthEvent(), plugin);
 		
 		
 		log.info("[" + getDescription().getName() + "] v" + getDescription().getVersion() + " is ready.");
+	}
+	
+	private static void loadWorldConfig() {
+		YamlConfiguration config;
+		for(World world : Bukkit.getServer().getWorlds()) {
+			config = YamlConfiguration.loadConfiguration(new File(resourcePath + "worlds/" + world.getName() + ".yml"));
+			if(!config.getBoolean("settings.change-food-level"))
+				foodChanger.put(world, config.getInt("settings.max-food-level"));
+			
+			if(!config.getBoolean("settings.regain-health"))
+				heartChanger.add(world);
+		}
 	}
 	
 	
@@ -89,7 +112,7 @@ public class CustomHealth extends JavaPlugin {
 	 */
 	public static void reloadPlugin() {
 		plugin.reloadConfig();
-		new FoodDataBase(plugin.getConfig());
+		loadWorldConfig();
 	}
 	
 	
@@ -97,8 +120,44 @@ public class CustomHealth extends JavaPlugin {
 	 * Is the food level changing?
 	 * @return true, if that's the case
 	 */
-	public static boolean isFoodLevelChanging() {
-		return isFoodLevelChanging;
+	public static boolean isFoodLevelChanging(World world) {
+		return foodChanger.containsKey(world);
+	}
+	
+	/**
+	 * Get the max food level
+	 * @return maxFoodLevel
+	 */
+	public static int getMaxFoodLevel(World world) {
+		return (isFoodLevelChanging(world)) ? foodChanger.get(world) : -1;
+	}
+	
+	
+	/**
+	 * Check, if the heart level should be changing or not
+	 * @param world
+	 * @return
+	 */
+	public static boolean isHeartLevelChanging(World world) {
+		return heartChanger.contains(world);
+	}
+	
+	
+	/**
+	 * Display an error message to the console
+	 * @param message
+	 */
+	public static void displayErrorMessage(String message) {
+		System.err.println(errorPrefix + message);
+	}
+	
+	
+	/**
+	 * Get the resource path "plugins/CustomHealth/"
+	 * @return
+	 */
+	public static String getResourcePath() {
+		return resourcePath;
 	}
 	
 }
