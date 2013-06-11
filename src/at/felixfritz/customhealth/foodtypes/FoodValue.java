@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.bukkit.Material;
 
+import at.felixfritz.customhealth.util.FloatValue;
+import at.felixfritz.customhealth.util.IntValue;
+
 /**
  * The FoodValue: An object, that contains the material, 
  * the amount of hearts it regenerates and the amount of hunger bars it fills up
@@ -14,9 +17,9 @@ import org.bukkit.Material;
 public class FoodValue {
 	
 	private String name;
-	private int regenHearts = 0;
-	private int regenHunger = 0;
-	private float saturation = 0;
+	private IntValue regenHearts = new IntValue();
+	private IntValue regenHunger = new IntValue();
+	private FloatValue saturation = new FloatValue();
 	private List<EffectValue> effects = new ArrayList<EffectValue>();
 	
 	/**
@@ -24,23 +27,36 @@ public class FoodValue {
 	 * @param foodName
 	 */
 	public FoodValue(String foodName) {
-		setName(foodName);
+		initialize(foodName, regenHearts, regenHunger, saturation, effects);
 	}
 	
-	public FoodValue(String foodName, int regenHearts, int regenHunger) {
-		setName(foodName);
-		setRegenHearts(regenHearts);
-		setRegenHunger(regenHunger);
+	public FoodValue(String foodName, IntValue regenHearts, IntValue regenHunger) {
+		initialize(foodName, regenHearts, regenHunger, saturation, effects);
 	}
 	
-	public FoodValue(String foodName, int regenHearts, int regenHunger, float saturation) {
-		setName(foodName);
-		setRegenHearts(regenHearts);
-		setRegenHunger(regenHunger);
-		setSaturation(saturation);
+	public FoodValue(String foodName, IntValue regenHearts, IntValue regenHunger, FloatValue saturation) {
+		initialize(foodName, regenHearts, regenHunger, saturation, effects);
 	}
 	
-	public FoodValue(String foodName, int regenHearts, int regenHunger, float saturation, List<EffectValue> effects) {
+	public FoodValue(String foodName, IntValue regenHearts, IntValue regenHunger, FloatValue saturation, List<EffectValue> effects) {
+		initialize(foodName, regenHearts, regenHunger, saturation, effects);
+	}
+	
+	public FoodValue(String foodName, int minHearts, int maxHearts, int minHunger, int maxHunger) {
+		initialize(foodName, new IntValue(minHearts, maxHearts), new IntValue(minHunger, maxHunger), saturation, effects);
+	}
+	
+	public FoodValue(String foodName, int minHearts, int maxHearts, int minHunger, int maxHunger, float minSaturation, float maxSaturation) {
+		initialize(foodName, new IntValue(minHearts, maxHearts), new IntValue(minHunger, maxHunger), new FloatValue(minSaturation, maxSaturation), effects);
+	}
+	
+	public FoodValue(String foodName, int minHearts, int maxHearts, int minHunger, int maxHunger, float minSaturation, float maxSaturation, List<EffectValue> effects) {
+		initialize(foodName, new IntValue(minHearts, maxHearts), new IntValue(minHunger, maxHunger), new FloatValue(minSaturation, maxSaturation), effects);
+	}
+	
+	
+	
+	private void initialize(String foodName, IntValue regenHearts, IntValue regenHunger, FloatValue saturation, List<EffectValue> effects) {
 		setName(foodName);
 		setRegenHearts(regenHearts);
 		setRegenHunger(regenHunger);
@@ -71,56 +87,33 @@ public class FoodValue {
 	}
 	
 	
-	/**
-	 * Get the hearts regenerated when eating the food
-	 * @return regenHearts
-	 */
-	public int getRegenHearts() {
+	
+	public IntValue getRegenHearts() {
 		return regenHearts;
 	}
 	
 	
-	/**
-	 * Get the hunger regenerated when eating the food
-	 * @return regenHunger
-	 */
-	public int getRegenHunger() {
-		return regenHunger;
-	}
-	
-	
-	/**
-	 * Get the saturation level when eating the food
-	 * @return saturation
-	 */
-	public float getSaturation() {
-		return saturation;
-	}
-	
-	
-	/**
-	 * Set hearts regenerated
-	 * @param regenHearts
-	 */
-	public void setRegenHearts(int regenHearts) {
+	public void setRegenHearts(IntValue regenHearts) {
 		this.regenHearts = regenHearts;
 	}
 	
 	
-	/**
-	 * Set hunger regenerated
-	 * @param regenHunger
-	 */
-	public void setRegenHunger(int regenHunger) {
+	public IntValue getRegenHunger() {
+		return regenHunger;
+	}
+	
+	
+	public void setRegenHunger(IntValue regenHunger) {
 		this.regenHunger = regenHunger;
 	}
 	
 	
-	/**
-	 * Set saturation level
-	 * @param saturation
-	 */
-	public void setSaturation(float saturation) {
+	public FloatValue getSaturation() {
+		return saturation;
+	}
+	
+	
+	public void setSaturation(FloatValue saturation) {
 		this.saturation = saturation;
 	}
 	
