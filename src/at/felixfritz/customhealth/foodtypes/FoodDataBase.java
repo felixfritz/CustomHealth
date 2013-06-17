@@ -26,6 +26,7 @@ public class FoodDataBase {
 	
 	//this list is available for everyone from everywhere!
 	public static Map<World, List<FoodValue>> foods;
+	private static YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new File("template0x0159.yml"));
 	
 	/**
 	 * Constructor with the FileConfiguration
@@ -40,9 +41,9 @@ public class FoodDataBase {
 		if(!new File(resource).exists())
 			new File(resource).mkdir();
 		
-		for(World world : worlds) {
+		for(World world : worlds)
 			addWorld(world);
-		}
+		
 	}
 	
 	
@@ -72,6 +73,7 @@ public class FoodDataBase {
 		
 		list.add(getValue("cake_block", config));
 		list.add(getValue("enchanted_golden_apple", config));
+		list.add(getValue("milk_bucket", config));
 		
 		return list;
 	}
@@ -85,16 +87,21 @@ public class FoodDataBase {
 		
 		food = food.toLowerCase();
 		String path = "food." + food;
-		int[] regenHeartsInt = UselessMath.stringToIntArray(config.getString(path + ".hearts"));
-		int[] regenHungerInt = UselessMath.stringToIntArray(config.getString(path + ".food"));
-		float[] saturationFloat = UselessMath.stringToFloatArray(config.getString(path + ".saturation"));
+		
+		String heartsString = (config.getString(path + ".hearts") != null) ? config.getString(path + ".hearts") : defaultConfig.getString(path + ".hearts");
+		String hungerString = (config.getString(path + ".food") != null) ? config.getString(path + ".food") : defaultConfig.getString(path + ".food");
+		String saturationString = (config.getString(path + ".saturation") != null) ? config.getString(path + ".saturation") : defaultConfig.getString(path + ".saturation");
+		
+		int[] regenHeartsInt = UselessMath.stringToIntArray(heartsString);
+		int[] regenHungerInt = UselessMath.stringToIntArray(hungerString);
+		float[] saturationFloat = UselessMath.stringToFloatArray(saturationString);
 		
 		IntValue regenHeartsValue = Converter.stringToIntValue(config.getString(path + ".hearts"));
 		IntValue regenHungerValue = Converter.stringToIntValue(config.getString(path + ".hearts"));
 		FloatValue saturationValue = Converter.stringToFloatValue(config.getString(path + ".hearts"));
 		
 		if(regenHeartsInt.length == 0) {
-			CustomHealth.displayErrorMessage("Couldn't convert " + config.getString(path + ".hearts") + " for " + food + "!");
+			CustomHealth.displayErrorMessage("Couldn't convert hearts value for " + food + "!");
 			CustomHealth.displayErrorMessage("Setting the hearts value of " + food + " to 0!");
 			regenHeartsValue = new IntValue();
 		} else
@@ -102,25 +109,26 @@ public class FoodDataBase {
 		
 		
 		if(regenHungerInt.length == 0) {
-			CustomHealth.displayErrorMessage("Couldn't convert " + config.getString(path + ".food") + " for " + food + "!");
-			CustomHealth.displayErrorMessage("Setting the hunger value of " + food + " to " + config.getInt(path + ".food") + "!");
-			regenHungerValue = new IntValue(config.getInt(path + ".food"));
+			CustomHealth.displayErrorMessage("Couldn't convert food value for " + food + "!");
+			CustomHealth.displayErrorMessage("Setting the hunger value of " + food + " to " + defaultConfig.getInt(path + ".food") + "!");
+			regenHungerValue = new IntValue(defaultConfig.getInt(path + ".food"));
 		} else
 			regenHungerValue = new IntValue(regenHungerInt);
 		
 		
 		if(saturationFloat.length == 0) {
-			CustomHealth.displayErrorMessage("Couldn't convert " + config.getString(path + ".saturation") + " for " + food + "!");
-			CustomHealth.displayErrorMessage("Setting saturation level of " + food + " to " + config.getDouble(path + ".saturation") + "!");
-			saturationValue = new FloatValue((float) config.getDouble(path + ".saturation"));
+			CustomHealth.displayErrorMessage("Couldn't convert saturation for " + food + "!");
+			CustomHealth.displayErrorMessage("Setting saturation level of " + food + " to " + defaultConfig.getDouble(path + ".saturation") + "!");
+			saturationValue = new FloatValue((float) defaultConfig.getDouble(path + ".saturation"));
 		} else
 			saturationValue = new FloatValue(saturationFloat);
 		
 		
 		//Check, if the food has any effects yet
-		String effects = config.getString(path + ".effects");
+		String effects = (config.getString(path + ".effects") != null) ? config.getString(path + ".effects") : defaultConfig.getString(path + ".effects");
+		
 		List<EffectValue> effectList = null;
-		if(effects != null && !effects.equalsIgnoreCase("none"))
+		if(!effects.equalsIgnoreCase("none"))
 			effectList = getPotionEffects(effects.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "").split(";"));
 		
 		FoodValue value = new FoodValue(food);
@@ -154,13 +162,19 @@ public class FoodDataBase {
 	 * @return food value
 	 */
 	public static FoodValue getFoodValue(World world, String name) {
+		
+		if(!foods.containsKey(world))
+			addWorld(world);
+		
 		List<FoodValue> list = foods.get(world);
-		for(int x = 0; x < foods.size(); x++) {
+		
+		for(int x = 0; x < list.size(); x++) {
 			if(list.get(x).getName().equalsIgnoreCase(name))
 				return list.get(x);
+			
 		}
 		
-		return null;
+		return new FoodValue("APPLE");
 	}
 	
 	
@@ -187,7 +201,7 @@ public class FoodDataBase {
 				try {
 					value.setStrength(new IntValue(UselessMath.stringToIntArray(tmp[3])));
 				} catch(NumberFormatException e) {
-					CustomHealth.displayErrorMessage(tmp[3] + " is not an integer!");
+					CustomHealth.displayErrorMessage(tmp[3] + " is not a recognizable number for the strength.");
 					continue;
 				} catch(Exception e) {
 					CustomHealth.displayErrorMessage("Something went wrong when using " + tmp[3] + ".");
@@ -197,7 +211,7 @@ public class FoodDataBase {
 				try {
 					value.setDuration(new IntValue(UselessMath.stringToIntArray(tmp[2])));
 				} catch(NumberFormatException e) {
-					CustomHealth.displayErrorMessage(tmp[2] + " is not an integer!");
+					CustomHealth.displayErrorMessage(tmp[2] + " is not a recognizable number for the duration.");
 					continue;
 				} catch(Exception e) {
 					CustomHealth.displayErrorMessage("Something went wrong when using " + tmp[2] + ".");
@@ -207,7 +221,7 @@ public class FoodDataBase {
 				try {
 					value.setProbability(new FloatValue(UselessMath.stringToFloatArray(tmp[1].replaceAll("%", ""))).divideBy(100));
 				} catch(NumberFormatException e) {
-					CustomHealth.displayErrorMessage(tmp[1] + " is not an integer!");
+					CustomHealth.displayErrorMessage(tmp[1] + " is not a percentage.");
 					continue;
 				} catch(Exception e) {
 					CustomHealth.displayErrorMessage("Something went wrong when using " + tmp[1] + ".");
@@ -217,7 +231,7 @@ public class FoodDataBase {
 				try {
 					value.setEffect(Integer.valueOf(tmp[0]));
 				} catch(NumberFormatException e) {
-					CustomHealth.displayErrorMessage(tmp[0] + " is not a valid number.");
+					CustomHealth.displayErrorMessage(tmp[0] + " is not a valid number for a potion effect.");
 					continue;
 				} catch(Exception e) {
 					CustomHealth.displayErrorMessage("Something went wrong when using " + tmp[0] + ".");
