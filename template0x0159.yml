@@ -1,16 +1,23 @@
+# 
+# A player has a total amount of 20 hearts and 20 food bars
+# If a player eats the food, you can decide, how many hearts or food bars should be filled up
+# 
+
 settings:
 
-# Do you want the player to regain health when saturated?
+  # Do you want the player to regain health when saturated?
   regain-health: true
 
-# Do you want to change the food level to change for a player?
-# This can be set to true (by default), or false, if you don't want the player to lose any food levels (still can regain it thorugh eating, though)
+  # Do you want to change the food level to change for a player?
+  # This can be set to true (by default), or false, if you don't want the player to lose any food levels (still can regain it thorugh eating, though)
   change-food-level: true
   max-food-level: 19
 
 
 
 
+# 
+# Except for the potion type, you can always use min/max values, e.g. 3/6, and a random number from 3 - 6 will be chosen.
 # 
 # If you don't want to have any effects on a food, type in none
 #
@@ -111,6 +118,12 @@ food:
     food: 2
     saturation: 1.2
     effects: none
+  
+  milk_bucket:
+    hearts: 0
+    food: 0
+    saturation: 0
+    effects: [-1]
   
   mushroom_soup:
     hearts: 0
