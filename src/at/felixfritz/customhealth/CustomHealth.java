@@ -1,6 +1,7 @@
 package at.felixfritz.customhealth;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,7 @@ public class CustomHealth extends JavaPlugin {
 		 * should be enabled or not.
 		 */
 		foodChanger = new HashMap<World, Integer>();
+		heartChanger = new ArrayList<World>();
 		loadWorldConfig();
 		
 		getServer().getPluginManager().registerEvents(new FoodEvent(), plugin);
@@ -79,8 +81,10 @@ public class CustomHealth extends JavaPlugin {
 		YamlConfiguration config;
 		for(World world : Bukkit.getServer().getWorlds()) {
 			config = YamlConfiguration.loadConfiguration(new File(resourcePath + "worlds/" + world.getName() + ".yml"));
-			if(!config.getBoolean("settings.change-food-level"))
-				foodChanger.put(world, config.getInt("settings.max-food-level"));
+			if(!config.getBoolean("settings.change-food-level")) {
+				int max = config.getInt("settings.max-food-level");
+				foodChanger.put(world, (max < 0 || max > 20) ? 19 : max);
+			}
 			
 			if(!config.getBoolean("settings.regain-health"))
 				heartChanger.add(world);
@@ -112,6 +116,7 @@ public class CustomHealth extends JavaPlugin {
 	 */
 	public static void reloadPlugin() {
 		plugin.reloadConfig();
+		new FoodDataBase(plugin.getConfig());
 		loadWorldConfig();
 	}
 	
@@ -121,7 +126,7 @@ public class CustomHealth extends JavaPlugin {
 	 * @return true, if that's the case
 	 */
 	public static boolean isFoodLevelChanging(World world) {
-		return foodChanger.containsKey(world);
+		return !foodChanger.containsKey(world);
 	}
 	
 	/**
