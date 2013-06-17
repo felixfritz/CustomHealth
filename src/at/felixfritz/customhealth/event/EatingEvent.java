@@ -49,24 +49,20 @@ public class EatingEvent implements Listener {
 		/*
 		 * Check first, if he ate the MushroomSoup, put a bowl in his inventory then
 		 */
-		if(p.getItemInHand().getType().equals(Material.MUSHROOM_SOUP)) {
-			
+		if(p.getItemInHand().getType().equals(Material.MUSHROOM_SOUP))
 			p.setItemInHand(new ItemStack(Material.BOWL, 1));
 		
-		} else if(p.getItemInHand().getType().equals(Material.MILK_BUCKET)) {
-			
+		else if(p.getItemInHand().getType().equals(Material.MILK_BUCKET))
 			p.setItemInHand(new ItemStack(Material.BUCKET, 1));
-			for(PotionEffect effect : p.getActivePotionEffects())
-				p.removePotionEffect(effect.getType());
 		
-		} else {
+		else
 			p.getItemInHand().setAmount(p.getItemInHand().getAmount() - 1);
-		}
+		
 		
 		/*
 		 * Check first, if the food is edible or not
 		 */
-		if(m.isEdible()) {
+		if(m.isEdible() || m == Material.MILK_BUCKET) {
 			
 			/*
 			 * Check the food, the player has eaten
@@ -74,7 +70,7 @@ public class EatingEvent implements Listener {
 			String foodName = (m == Material.GOLDEN_APPLE && i.getData().getData() == 1) ? "enchanted_golden_apple" : m.name();
 			FoodValue value = FoodDataBase.getFoodValue(p.getWorld(), foodName);
 			
-			foodEaten(p, value);
+			foodEaten(p, i, value);
 			
 			return;
 		}
@@ -93,7 +89,7 @@ public class EatingEvent implements Listener {
 				Player p = evt.getPlayer();
 				p.setFoodLevel(getCorrectValue(p.getFoodLevel() - 2));
 				
-				foodEaten(p, FoodDataBase.getFoodValue(p.getWorld(), "cake_block"));
+				foodEaten(p, new ItemStack(Material.CAKE_BLOCK), FoodDataBase.getFoodValue(p.getWorld(), "cake_block"));
 			}
 		} catch(NullPointerException e) {
 		} catch(Exception e) {
@@ -119,7 +115,7 @@ public class EatingEvent implements Listener {
 	 * @param player
 	 * @param value FoodValue, which contains the amount of health and food bars restored, as well as the effects
 	 */
-	private void foodEaten(Player p, FoodValue value) {
+	private void foodEaten(Player p, ItemStack item, FoodValue value) {
 		/*
 		 * Set hunger and health of player.
 		 * Make sure it's also between 0 and 20, because it throws an error if it's above or below
@@ -127,7 +123,6 @@ public class EatingEvent implements Listener {
 		
 		int rHearts = value.getRegenHearts().getNum();
 		int rHunger = value.getRegenHunger().getNum();
-		ItemStack item = p.getItemInHand();
 		
 		if(item.getItemMeta().hasLore()) {
 			List<String> lore = item.getItemMeta().getLore();
@@ -148,8 +143,9 @@ public class EatingEvent implements Listener {
 		
 		p.setHealth(getCorrectValue(health));
 		p.setFoodLevel((!CustomHealth.isFoodLevelChanging(p.getWorld()) && food >= CustomHealth.getMaxFoodLevel(p.getWorld())) ? 
-				CustomHealth.getMaxFoodLevel(p.getWorld()) : getCorrectValue(food));
+				getCorrectValue(CustomHealth.getMaxFoodLevel(p.getWorld())) : getCorrectValue(food));
 		p.setSaturation(saturate);
+		
 		
 		//Check, if there are any effects on the food
 		if(value.getEffects() != null && value.getEffects().size() != 0) {
@@ -159,12 +155,17 @@ public class EatingEvent implements Listener {
 				
 				//Quick check for the probability: if a random number between 0 and 1 is greater than the probability (eg. 0.617 > 0.5), don't do anything
 				if(Math.random() <= effect.getProbability().getNum()) {
-					if(effect.getEffect() == 0)
-						p.giveExp(effect.getDuration().getNum());
-					else {
+					if(effect.getEffect() >  0) {
 						PotionEffectType type = PotionEffectType.getById(effect.getEffect());
 						p.removePotionEffect(type);
 						p.addPotionEffect(type.createEffect((effect.getDuration().getNum() * 20) + 19, effect.getStrength().getNum()));
+					} else if(effect.getEffect() == 0)
+						p.giveExp(effect.getDuration().getNum());
+					else {
+						
+						for(PotionEffect effecta : p.getActivePotionEffects())
+							p.removePotionEffect(effecta.getType());
+						
 					}
 				}
 			}
