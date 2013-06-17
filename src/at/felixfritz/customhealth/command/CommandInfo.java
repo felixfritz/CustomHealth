@@ -36,7 +36,7 @@ public class CommandInfo {
 			String saturation = String.valueOf(foodValue.getSaturation());
 			StringBuilder effects = new StringBuilder();
 			
-			if(foodValue.getEffects() == null) {
+			if(foodValue.getEffects() == null || foodValue.getEffects().size() == 0) {
 				effects.append("none");
 			} else {
 				for(EffectValue effect : foodValue.getEffects()) {
