@@ -100,7 +100,6 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				Messenger.sendMessage(ChatColor.GREEN + "CustomHealth reloaded.", sender);
 				return true;
 			}
-			
 		}
 		
 		
@@ -145,7 +144,7 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			//call the informPlayer method in the InfoCommand class.
 			ItemStack s = p.getItemInHand();
 			Material m = s.getType();
-			if(m.isEdible() || m.equals(Material.CAKE_BLOCK))
+			if(m.isEdible() || m.equals(Material.CAKE_BLOCK) || m.equals(Material.MILK_BUCKET))
 				CommandInfo.informPlayer(p, s);
 			else
 				Messenger.sendMessage(plugin.getConfig().getString("messages.item-not-edible").replaceAll("<food>", m.toString()), p);
