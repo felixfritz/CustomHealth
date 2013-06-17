@@ -88,6 +88,8 @@ public class EffectValue {
 	public String getName() {
 		if(effect == 0)
 			return duration.toString() + " XP";
+		if(effect < 0)
+			return "Remove all effects";
 		
 		return PotionEffectType.getById(effect).getName();
 	}
