@@ -97,7 +97,11 @@ public class CustomHealth extends JavaPlugin {
 	 */
 	@Override
 	public void onDisable() {
-		plugin.saveDefaultConfig();
+		plugin = null;
+		resourcePath = null;
+		errorPrefix = null;
+		foodChanger = null;
+		heartChanger = null;
 		log.info("[" + getDescription().getName() + "] Closed.");
 	}
 	
@@ -144,7 +148,7 @@ public class CustomHealth extends JavaPlugin {
 	 * @return
 	 */
 	public static boolean isHeartLevelChanging(World world) {
-		return heartChanger.contains(world);
+		return !heartChanger.contains(world);
 	}
 	
 	
