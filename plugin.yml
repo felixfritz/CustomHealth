@@ -1,6 +1,6 @@
 name: CustomHealth
 main: at.felixfritz.customhealth.CustomHealth
-version: 0.5 Beta
+version: 0.5.1 Beta
 author: felixfritz
 website: http://dev.bukkit.org/server-mods/custom-health/
 
@@ -19,6 +19,7 @@ permissions:
       customhealth.commands.plugin: true
       customhealth.commands.reset: true
       customhealth.commands.reload: true
+      customhealth.commands.create: true
 
   customhealth.commands.info:
     description: Get health/food/effect value of a food item.
@@ -38,4 +39,8 @@ permissions:
   
   customhealth.commands.reload:
     description: Reload config.
+    default: op
+  
+  customhealth.commands.create:
+    description: Create new yml file.
     default: op
