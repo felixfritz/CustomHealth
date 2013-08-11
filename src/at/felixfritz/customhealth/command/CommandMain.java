@@ -1,5 +1,6 @@
 package at.felixfritz.customhealth.command;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,6 +101,41 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				Messenger.sendMessage(ChatColor.GREEN + "CustomHealth reloaded.", sender);
 				return true;
 			}
+			
+			
+			/*
+			 * Create template
+			 */
+			if(args[0].equalsIgnoreCase("create") && sender.hasPermission("customhealth.commands.create")) {
+				int amount = 1;
+				if(args.length > 1) {
+					try {
+						amount = Integer.parseInt(args[1]);
+					} catch(Exception e) {}
+				}
+				
+				char letter = 'A';
+				for(int x = 0; x < amount; x++) {
+					String fileName = CustomHealth.getResourcePath() + "worlds/group" + letter + ".yml";
+					
+					while(new File(fileName).exists()) {
+						letter++;
+						if(letter > 'Z') {
+							sender.sendMessage(ChatColor.RED + "There are already 26 config files!");
+							sender.sendMessage(ChatColor.RED + "Sadly, the alphabet only has 26 letters...");
+							sender.sendMessage(ChatColor.RED + "Rename some files manually if you need more.");
+							return true;
+						}
+						fileName = CustomHealth.getResourcePath() + "worlds/group" + letter + ".yml";
+					}
+					
+					CustomHealth.getPlugin().saveResource("template0x0159.yml", true);
+					new File(CustomHealth.getResourcePath() + "template0x0159.yml").renameTo(new File(fileName));
+					
+					sender.sendMessage(ChatColor.GREEN + "Created " + ChatColor.DARK_GREEN + "group" + letter + ".yml " + ChatColor.GREEN + "file.");
+				}
+				return true;
+			}
 		}
 		
 		
@@ -119,6 +155,8 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			sender.sendMessage(suffix + "info" + descr + ": Get health/food value/effects from item.");
 		if(sender.hasPermission("customhealth.commands.set") && !(sender instanceof ConsoleCommandSender))
 			sender.sendMessage(suffix + "set" + descr + ": Set value for item in hand.");
+		if(sender.hasPermission("customhealth.commands.create"))
+			sender.sendMessage(suffix + "create (#)" + descr + ": Create new template file.");
 		if(sender.hasPermission("customhealth.commands.reload"))
 			sender.sendMessage(suffix + "reload" + descr + ": Reload the config file.");
 		if(sender.hasPermission("customhealth.commands.reset"))
@@ -273,6 +311,8 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				list.add("reset");
 			if("plugin".startsWith(args[0].toLowerCase()) && sender.hasPermission("customhealth.commands.plugin"))
 				list.add("plugin");
+			if("create".startsWith(args[0].toLowerCase()) && sender.hasPermission("customhealth.commands.create"))
+				list.add("create");
 			
 		} else if(args.length == 2 && ("get".startsWith(args[0].toLowerCase()) || "info".startsWith(args[0].toLowerCase())) && sender.hasPermission("customhealth.commands.info")) {
 			for(String food : FoodDataBase.getFoodNames()) {
