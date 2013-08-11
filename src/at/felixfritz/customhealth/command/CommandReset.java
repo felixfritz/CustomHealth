@@ -1,5 +1,7 @@
 package at.felixfritz.customhealth.command;
 
+import java.io.File;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
@@ -17,6 +19,9 @@ public class CommandReset {
 		
 		//Overwrite the config.yml file in the CustomHealth folder
 		CustomHealth.getPlugin().saveResource("config.yml", /* Overwrite it? */ true);
+		for(File file : new File("plugins/CustomHealth/worlds/").listFiles())
+			file.delete();
+		
 		CustomHealth.reloadPlugin();
 		
 		//Tell the user that everything went successful
