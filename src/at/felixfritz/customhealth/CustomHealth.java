@@ -27,6 +27,7 @@ public class CustomHealth extends JavaPlugin {
 	
 	private static Map<World, Integer> foodChanger;
 	private static List<World> heartChanger;
+	private static YamlConfiguration template;
 	
 	
 	/**
@@ -37,6 +38,9 @@ public class CustomHealth extends JavaPlugin {
 		
 		plugin = this;
 		resourcePath = "plugins/" + getDescription().getName() + "/";
+		if(!new File(resourcePath + "worlds/").exists())
+			new File(resourcePath + "worlds/").mkdir();
+		template = YamlConfiguration.loadConfiguration(getResource("template0x0159.yml"));
 		
 		/*
 		 * Save all the configuration in plugins/CustomHealth/config.yml
@@ -79,15 +83,41 @@ public class CustomHealth extends JavaPlugin {
 	
 	private static void loadWorldConfig() {
 		YamlConfiguration config;
-		for(World world : Bukkit.getServer().getWorlds()) {
-			config = YamlConfiguration.loadConfiguration(new File(resourcePath + "worlds/" + world.getName() + ".yml"));
-			if(!config.getBoolean("settings.change-food-level")) {
-				int max = config.getInt("settings.max-food-level");
-				foodChanger.put(world, (max < 0 || max > 20) ? 19 : max);
+		if(new File(resourcePath + "worlds/").listFiles() == null) {
+			System.out.println("Could not find any world config files. Create them with /ch create");
+			return;
+		}
+		for(File file : new File(resourcePath + "worlds/").listFiles()) {
+			if(file.getName().endsWith(".yml")) {
+				
+				config = YamlConfiguration.loadConfiguration(file);
+				if(config.getString("worlds") == null)
+					continue;
+				
+				boolean foodChange = config.contains("settings.change-food-level") ? config.getBoolean("settings.change-food-level") : true;
+				boolean heartChange = config.contains("settings.regain-health") ? config.getBoolean("settings.regain-health") : true;
+				
+				for(String worldString : config.getString("worlds").replaceAll(" ", "").split(",")) {
+					World world = Bukkit.getWorld(worldString);
+					if(world == null)
+						continue;
+					
+					if(FoodDataBase.foods.containsKey(world))
+						continue;
+					
+					if(!foodChange) {
+						int max = (config.contains("settings.max-food-level")) ? config.getInt("settings.max-food-level") : 19;
+						foodChanger.put(world, (max < 0 || max > 20) ? 19 : max);
+					}
+					
+					if(!heartChange)
+						heartChanger.add(world);
+					
+					FoodDataBase.addWorld(world, config);
+				}
+				
+				
 			}
-			
-			if(!config.getBoolean("settings.regain-health"))
-				heartChanger.add(world);
 		}
 	}
 	
@@ -169,4 +199,11 @@ public class CustomHealth extends JavaPlugin {
 		return resourcePath;
 	}
 	
+	/**
+	 * Get template
+	 * @return
+	 */
+	public static YamlConfiguration getTemplate() {
+		return template;
+	}
 }
