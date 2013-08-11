@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -34,37 +33,22 @@ public class FoodDataBase {
 	 */
 	public FoodDataBase(FileConfiguration cfg) {
 		foods = new HashMap<World, List<FoodValue>>();
-		List<World> worlds = Bukkit.getServer().getWorlds();
-		
-		String resource = CustomHealth.getResourcePath() + "worlds/";
-		
-		if(!new File(resource).exists())
-			new File(resource).mkdir();
-		
-		for(World world : worlds)
-			addWorld(world);
-		
 	}
 	
 	
+	public static void addWorld(World world, YamlConfiguration config) {
+		List<FoodValue> values = getValues(config);
+		foods.put(world, values);
+	}
+	
 	public static void addWorld(World world) {
-		String resource = CustomHealth.getResourcePath();
-		File worldFile = new File(resource + "worlds/" + world.getName() + ".yml");
-		
-		if(!worldFile.exists()) {
-			CustomHealth.getPlugin().saveResource("template0x0159.yml", true);
-			new File(resource + "template0x0159.yml").renameTo(worldFile);
-		}
-		
-		List<FoodValue> values = getValues(worldFile);
+		List<FoodValue> values = getValues(CustomHealth.getTemplate());
 		foods.put(world, values);
 	}
 	
 	
-	private static List<FoodValue> getValues(File file) {
+	private static List<FoodValue> getValues(YamlConfiguration config) {
 		List<FoodValue> list = new ArrayList<FoodValue>();
-		
-		YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 		
 		for(Material mat : Material.values()) {
 			if(mat.isEdible())
