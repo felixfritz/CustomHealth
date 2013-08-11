@@ -62,8 +62,7 @@ public class EffectValue {
 	}
 	
 	public void setStrength(IntValue strength) {
-		strength.decrementAll();
-		this.strength = strength;
+		this.strength = strength.decrementAll();
 	}
 	
 	public IntValue getStrength() {
