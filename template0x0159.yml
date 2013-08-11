@@ -1,11 +1,16 @@
+
+# In what worlds do you want this config file to apply?
+# split with , . (eg.: world1, world2, world3, worldbla)
+worlds: 
+
 # 
 # A player has a total amount of 20 hearts and 20 food bars
-# If a player eats the food, you can decide, how many hearts or food bars should be filled up
+# If a player eats the food, you can decide, how many hearts or food bars should be regenerated
 # 
 
 settings:
 
-  # Do you want the player to regain health when saturated?
+  # Do you want the player to regain health when he has a food level that's above or equal to 8 bars?
   regain-health: true
 
   # Do you want to change the food level to change for a player?
