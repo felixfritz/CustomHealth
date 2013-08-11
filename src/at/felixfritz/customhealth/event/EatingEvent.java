@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -137,11 +138,11 @@ public class EatingEvent implements Listener {
 			}
 		}
 		
-		int health = rHearts + p.getHealth();
+		int health = rHearts + (int) ((CraftPlayer)p).getHandle().getHealth();
 		int food = rHunger + p.getFoodLevel();
 		float saturate = value.getSaturation().getNum() + p.getSaturation();
 		
-		p.setHealth(getCorrectValue(health));
+		p.setHealth((double) getCorrectValue(health));
 		p.setFoodLevel((!CustomHealth.isFoodLevelChanging(p.getWorld()) && food >= CustomHealth.getMaxFoodLevel(p.getWorld())) ? 
 				getCorrectValue(CustomHealth.getMaxFoodLevel(p.getWorld())) : getCorrectValue(food));
 		p.setSaturation(saturate);
