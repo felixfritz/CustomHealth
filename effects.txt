@@ -1,4 +1,7 @@
-# This file just servers as a help page for you and does not contribute as a configuration file.
+# ** Minecraft 1.6.4 **
+# This file just serves as a help page for you and does not contribute as a configuration file.
+# 
+# Here are all the potion effects:
 # 
 # Potion 1: Speed
 # Potion 2: Slow
@@ -23,6 +26,15 @@
 # Potion 18: Weakness
 # Potion 19: Poison
 # Potion 20: Wither
-#
-# Potion 0: XP (eg. effects: [0, 100%, 50]   -> 50 is the amount of XP you want to give)
-# Potion -1: Remove all effects (does not affect XP)
+# 
+# 
+# 
+# All other effects that don't qualify as potion effects:
+# 
+# [clear/<CHANCE>]: Clear all potion effects (as if you were drinking milk). Chance can be a number from 0 to 100.
+# [xp/<AMOUNT>/<CHANCE>]: Give the player an <AMOUNT> of xp (whole number, can be negative). Chance can be a number from 0 to 100.
+# [cmd/<COMMAND>/<CHANCE>]: Make the player execute a command. Command may not include the '/' character! Chance can be a number from 0 to 100.
+# [burn/<DURATION>/<CHANCE>]: Set the player on fire for <DURATION> seconds (whole number). Chance can be a number from 0 to 100.
+# 
+# [override]: Original potion effects from food item will be cancelled. It might cause bugs!
+# [cancel]: Cancel the event, as if the food item was never eaten. All effects will not be applied.
