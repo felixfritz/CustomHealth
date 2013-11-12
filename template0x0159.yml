@@ -1,191 +1,206 @@
+#######################
+#    Custom Health    #
+# World Configuration #
+#######################
 
-# In what worlds do you want this config file to apply?
-# split with , . (eg.: world1, world2, world3, worldbla)
+# What world(s) do you want this specific configuration file to apply to?
+# Example: "worlds: world1, world2, world_nether"
+# Leaving it empty specifies that this file will apply to no world.
 worlds: 
 
-# 
-# A player has a total amount of 20 hearts and 20 food bars
-# If a player eats the food, you can decide, how many hearts or food bars should be regenerated
-# 
 
 settings:
 
-  # Do you want the player to regain health when he has a food level that's above or equal to 8 bars?
+  # Do you want the player to regain health from having enough of their food bar filled up?
   regain-health: true
 
-  # Do you want to change the food level to change for a player?
-  # This can be set to true (by default), or false, if you don't want the player to lose any food levels (still can regain it thorugh eating, though)
+  # Here you can change the maximum amount of "hunger units" that a player can have.
+  # By default, it is set to 20 units. Setting it to a number outside the range from 0 to 20 will be ignored by the plugin.
+  # 
+  # Example: "max-food-level: 10" - Your hunger bar can be, at most, half full (5 units) at any given time.
+  # Example: "max-food-level: 6" - Your hunger bar can only be 3 units full, preventing the player to sprint.
+  # Example: "max-food-level: -1" - Mechanic in the game will not be touched by the plugin.
+  max-food-level: -1
+  
+  # Here you can decide whether or not the player should get hungry at any given time.
+  # Setting it to "false" means that the player will not lose any hunger units.
   change-food-level: true
-  max-food-level: 19
 
 
 
-
+# Coming up next is the food section, where you can configure the properties of eating food.
+# Note that even though IDs for food items and potion effects are accepted, we recommend using the actual
+# names to prevent the plugin from breaking when future bukkit versions are released.
 # 
-# Except for the potion type, you can always use min/max values, e.g. 3/6, and a random number from 3 - 6 will be chosen.
-# 
-# If you don't want to have any effects on a food, type in none
+# Here is a format you can use.
 #
-# The effects have to be structured like this:
-# [potiontype, probability, duration, strength]
-# You don't have to include all parameters, but the order is crucial:
-# [] -> Nothing happens
-# [1] -> Speed potion, 100% chance, 30 sec, strength 1
-# [2, 78%] -> Slowness potion, 78% chance, 30 sec, strength 1
-# [3, 78%, 10] -> Potion of haste, 78% chance, 10 sec, strength 1
-# [4, 78%, 10, 3] -> Slow Digging potion, 78% chance, 10 sec, strength 3
-#
-# You can also add multiple effects using the semicolon:
-# [10; 12, 14%; 17, 100%, 10, 5] -> Regeneration effect for 30 sec, a 14% chance of getting fire resistance for 30 sec and Hunger for 10 sec with the strength of 5
+# <NAME@DATAVALUE>:
+#   hearts: <whole number from "0" to "20", including negative numbers>
+#   food: <whole number from "0" to "20", including negative numbers>
+#   saturation: <whole number from "0" to "20", including negative numbers>
+#   potion: [<POTIONNAME/POWER/DURATION/CHANCE>; <POTIONNAME/POWER/DURATION/CHANCE>; <etc.>]
+#   effect: [<parameter>; <parameter>; <parameter>; <etc.>]
 # 
+# If parameters or food items are missing or invalid, the plugin will not interfere with the vanilla mechanics.
+# Specifying no data value on the item means to assume that the data value is "0". So "GOLDEN_APPLE" is assumed to be "GOLDEN_APPLE@0".
+# 
+# About potion effects:
+#   - Not all of the parameters have to be specified, but they must be in the right order
+#   - Power has to be an integer, starting at 1. (Default: 1)
+#   - Duration is an integer set in seconds. (Default: 30)
+#   - Chance can be a percentage from 0% to 100%. (Default: 100%)
+# 
+# About "effect":
+#   - This parameter is for extra effects that don't qualify as potion effects
+#   - "xp": Give the player experience like this: "effect: [xp/<INTEGER>/<CHANCE>]" where "<INTEGER>" specifies the amount of experience that the consumer receives.
+#   - "burn": Set the player on fire: "effect: [burn/<DURATION>/<CHANCE>]" where "<DURATION>" is the amount of seconds (default: 10)
+#   - "clear": Remove all potion effects, same as the milk bucket does: "effect: [clear/<CHANCE>]"
+#   - "override": Overrides the effects from the original food item (eg. no hunger effect from rotten flesh): "effect: [override]"
+#   - "cmd": Let the player perform a command: "effect: [cmd/<COMMAND>/<CHANCE>]" where "<COMMAND>" must not include the '/' at the beginning
+#   - "cancel": Prevent the player from eating the food item. Note: if cancelled, absolutely NO values will be applied: "effect: [cancel]"
+# 
+# Chances will be set to 100% by default.
+# 
+# All numbers CAN additionally include a second value (eg.: "10,13"). If specified, the plugin will use a random value in that range (in this case 10, 11, 12 or 13)
+# This does NOT include potion ID's or names, chance percentages, effect names and commands.
+# 
+# Here an example with explanation at the end.
+# GOLDEN_APPLE@1:
+#   hearts: 14
+#   food: 6
+#   saturation: 12.5
+#   potion: [REGENERATION/3/60; FAST_DIGGING/1/150/67%]
+#   effect: [xp/10,100/20%; override]
+# 
+# This is an enhanced golden apple. Eating it restores 7 entire hearts and 3 entire food units. Note how they measure "half-units", not entire units. It will also restore 12.5 points of saturation.
+# It will also apply level 3 regeneration for 60 seconds, guaranteed, along with a 2/3 chance of applying level 1 haste for 150 seconds.
+# Eating this golden apple will have a 20% chance of giving the consumer 10 and up to 100 points of experience.
+# You will not get any of the vanilla potion effects, due to the "override" parameter.
+# 
+# Again, if food items or parameters are missing, the plugin will not interfere with the vanilla mechanics! 
 
 food:
   apple:
     hearts: 0
     food: 4
     saturation: 2.4
-    effects: none
   
   baked_potato:
     hearts: 0
     food: 6
     saturation: 7.2
-    effects: none
   
   bread:
     hearts: 0
     food: 5
     saturation: 6
-    effects: none
   
   cake_block:
     hearts: 0
     food: 2
     saturation: 0.4
-    effects: none
   
   carrot_item:
     hearts: 0
     food: 4
     saturation: 4.8
-    effects: none
   
   cooked_beef:
     hearts: 0
     food: 8
     saturation: 12.8
-    effects: none
   
   cooked_chicken:
     hearts: 0
     food: 6
     saturation: 7.2
-    effects: none
   
   cooked_fish:
     hearts: 0
     food: 5
     saturation: 6
-    effects: none
   
   cookie:
     hearts: 0
     food: 2
     saturation: 0.4
-    effects: none
-  
-  enchanted_golden_apple:
-    hearts: 0
-    food: 4
-    saturation: 9.6
-    effects: [10, 100%, 30, 4; 11, 100%, 320; 12, 100%, 320]
   
   golden_apple:
     hearts: 0
     food: 4
     saturation: 9.6
-    effects: [10, 100%, 5]
+  
+  golden_apple@1:
+    hearts: 0
+    food: 4
+    saturation: 9.6
   
   golden_carrot:
     hearts: 0
     food: 6
     saturation: 14.4
-    effects: none
   
   grilled_pork:
     hearts: 0
     food: 8
     saturation: 12.8
-    effects: none
   
   melon:
     hearts: 0
     food: 2
     saturation: 1.2
-    effects: none
   
   milk_bucket:
     hearts: 0
     food: 0
     saturation: 0
-    effects: [-1]
   
   mushroom_soup:
     hearts: 0
     food: 6
     saturation: 7.2
-    effects: none
   
   poisonous_potato:
     hearts: 0
     food: 2
     saturation: 1.2
-    effects: [19, 60%, 7]
   
   pork:
     hearts: 0
     food: 3
     saturation: 1.8
-    effects: none
   
   potato_item:
     hearts: 0
     food: 1
     saturation: 0.6
-    effects: none
   
   pumpkin_pie:
     hearts: 0
     food: 8
     saturation: 4.8
-    effects: none
   
   raw_beef:
     hearts: 0
     food: 3
     saturation: 1.8
-    effects: none
   
   raw_chicken:
     hearts: 0
     food: 2
     saturation: 1.2
-    effects: [17, 30%]
   
   raw_fish:
     hearts: 0
     food: 2
     saturation: 1.2
-    effects: none
   
   rotten_flesh:
     hearts: 0
     food: 4
     saturation: 0.8
-    effects: [17, 80%]
   
   spider_eye:
     hearts: 0
     food: 2
     saturation: 3.2
-    effects: [19, 100%, 7]
