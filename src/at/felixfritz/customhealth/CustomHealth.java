@@ -1,209 +1,494 @@
 package at.felixfritz.customhealth;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.bukkit.Bukkit;
-import org.bukkit.World;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffectType;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
-import at.felixfritz.customhealth.command.CommandMain;
-import at.felixfritz.customhealth.event.EatingEvent;
-import at.felixfritz.customhealth.event.FoodEvent;
-import at.felixfritz.customhealth.event.HealthEvent;
-import at.felixfritz.customhealth.foodtypes.FoodDataBase;
+import at.felixfritz.customhealth.commands.CommandMain;
+import at.felixfritz.customhealth.eventlisteners.FoodChanger;
+import at.felixfritz.customhealth.eventlisteners.HeartChanger;
+import at.felixfritz.customhealth.eventlisteners.MainListener;
+import at.felixfritz.customhealth.foodtypes.EffectValue;
+import at.felixfritz.customhealth.foodtypes.FoodValue;
+import at.felixfritz.customhealth.foodtypes.PotionValue;
+import at.felixfritz.customhealth.foodtypes.effects.EffectBurn;
+import at.felixfritz.customhealth.foodtypes.effects.EffectClear;
+import at.felixfritz.customhealth.foodtypes.effects.EffectCmd;
+import at.felixfritz.customhealth.foodtypes.effects.EffectXP;
+import at.felixfritz.customhealth.util.RandomValue;
 
 public class CustomHealth extends JavaPlugin {
 	
-	Logger log = Logger.getLogger("Minecraft");
+	private Logger log = Logger.getLogger("Minecraft");
+	
+	private String prefix = "[CustomHealth] ";
+	private String resourcePath;
+	
 	private static CustomHealth plugin;
-	private static String resourcePath;
-	private static String errorPrefix = "[CustomHealth] [ERROR] ";
-	
-	private static Map<World, Integer> foodChanger;
-	private static List<World> heartChanger;
-	private static YamlConfiguration template;
-	
 	
 	/**
-	 * Start the plugin
+	 * onEnable method
 	 */
-	@Override
 	public void onEnable() {
 		
-		plugin = this;
+		log.info(prefix + "Loaading up CustomHealth v" + getDescription().getVersion() + ".");
+		
+		saveResource("effects.txt", true);
+		
 		resourcePath = "plugins/" + getDescription().getName() + "/";
 		if(!new File(resourcePath + "worlds/").exists())
 			new File(resourcePath + "worlds/").mkdir();
-		template = YamlConfiguration.loadConfiguration(getResource("template0x0159.yml"));
 		
-		/*
-		 * Save all the configuration in plugins/CustomHealth/config.yml
-		 */
-		saveDefaultConfig();
-		getConfig().options().copyDefaults(true);
-		// Include the effects.txt file
-		saveResource("effects.txt", true);
-		
-		/*
-		 * CommandExecutor, send everything to the main command class
-		 */
+		initializeWorlds();
 		getCommand("chealth").setExecutor(new CommandMain());
 		
-		/*
-		 * Make everything ready in the FoodDataBase. It just creates
-		 * an ArrayList of every edible food there
-		 */
-		new FoodDataBase(plugin.getConfig());
-		
-		/*
-		 * Register the eating event, called as soon as someone eats something, e.g. a fish, carrot or hamburger
-		 */
-		getServer().getPluginManager().registerEvents(new EatingEvent(), plugin);
-		
-		/*
-		 * Check, if the two events about changing the food level and changing the health level
-		 * should be enabled or not.
-		 */
-		foodChanger = new HashMap<World, Integer>();
-		heartChanger = new ArrayList<World>();
-		loadWorldConfig();
-		
-		getServer().getPluginManager().registerEvents(new FoodEvent(), plugin);
-		getServer().getPluginManager().registerEvents(new HealthEvent(), plugin);
-		
-		
-		log.info("[" + getDescription().getName() + "] v" + getDescription().getVersion() + " is ready.");
+		plugin = this;
 	}
 	
-	private static void loadWorldConfig() {
+	
+	/**
+	 * Load up all the world settings and save them in the database
+	 */
+	@SuppressWarnings("deprecation")
+	private void initializeWorlds() {
+		
+		Database.initialize();
+		
+		//Get all available files in "plugin/CustomHealth/worlds/".
+		List<File> list = new ArrayList<File>();
+		for(File file : new File(resourcePath + "worlds/").listFiles()) {
+			if(file.getName().endsWith(".yml")) list.add(file);
+		}
+		
+		//Create instance of YamlConfiguration. This is coning to be used in the for-loop.
 		YamlConfiguration config;
-		if(new File(resourcePath + "worlds/").listFiles() == null) {
-			System.out.println("Could not find any world config files. Create them with /ch create");
+		String heartRegenPath = "settings.regain-health";		//Save path of regain-health as an instance.
+		String foodChangePath = "settings.change-food-level";	//Save path of change-food-level as an instance.
+		String maxFoodLevelPath = "settings.max-food-level";	//Save path of max-food-level as an instance.
+		
+		List<String> heartRegenList = null;
+		List<String> foodChangeList = null;
+		//Check, if there are any files in "plugin/CustomHealth/worlds/".
+		if(list.size() == 0) {
+			//No, there are no files. Try and create a template for the user.
+			log.info(prefix + "No files found. Creating a template for you to edit.");
+			saveResource("template0x0159.yml", true);
+			new File("plugins/CustomHealth/template0x0159.yml").renameTo(new File("plugins/CustomHealth/worlds/groupA.yml"));
+			log.info(prefix + "Done.");
 			return;
 		}
-		for(File file : new File(resourcePath + "worlds/").listFiles()) {
-			if(file.getName().endsWith(".yml")) {
-				
-				config = YamlConfiguration.loadConfiguration(file);
-				if(config.getString("worlds") == null)
-					continue;
-				
-				boolean foodChange = config.contains("settings.change-food-level") ? config.getBoolean("settings.change-food-level") : true;
-				boolean heartChange = config.contains("settings.regain-health") ? config.getBoolean("settings.regain-health") : true;
-				
-				for(String worldString : config.getString("worlds").replaceAll(" ", "").split(",")) {
-					World world = Bukkit.getWorld(worldString);
-					if(world == null)
-						continue;
+		
+		//Go through each configuration file and save all the settings in the Database.
+		for(int x = 0; x < list.size(); x++) {
+			log.info(prefix + Math.round(((double) x) / ((double) list.size()) * 100D) + "% done.");
+			
+			File file = list.get(x);
+			
+			//Initialize config instance.
+			config = YamlConfiguration.loadConfiguration(file);
+			
+			//Check, if the config file contains a path called "worlds".
+			//If not, it wouldn't make sense to go through the whole loop, because nothing will be saved anyway.
+			if(!config.contains("worlds")) {
+				log.info(prefix + "Couldn't find any worlds for " + file.getName() + ". Ignoring file.");
+				continue;
+			}
+			
+			//Create a generic String-list that contains all the names of the worlds.
+			List<String> worlds = new ArrayList<String>();
+			
+			//All worlds are split with a comma (,). Split them up and check, if the worlds are available (worldName != null).
+			for(String s : config.getString("worlds").replaceAll(", ", ",").split(",")) {
+				if(getServer().getWorld(s) != null) {
+					if(Database.hasWorld(s))
+						log.info(prefix + "Duplicate: The world " + s + " in " + file.getName() + " already exists in another file. Ignoring it in here.");
+					else
+						worlds.add(s);
+				} else
+					log.info(prefix + s + " in file " + file.getName() + " is not a valid world. Ignoring it.");
+			}
+			
+			//If it couldn't find any worlds that are valid, it will ignore the file.
+			if(worlds.size() == 0) {
+				log.info(prefix + "No valid worlds found in file " + file.getName() + ". Ignoring file.");
+				continue;
+			}
+			
+			//Check for the "regain-health" setting.
+			if(!config.contains(heartRegenPath))
+				log.info(prefix + "Missing setting \"" + heartRegenPath + "\" in file " + file.getName() + ". Ignoring it.");
+			else {
+				//I'm checking for the String here, if it is set to "false" or "no".
+				//If I would get the boolean right out of the config, it would always return false, if there wasn't a valid entry, which I want to prevent.
+				if(config.getString(heartRegenPath).equalsIgnoreCase("false") || config.getString(heartRegenPath).equalsIgnoreCase("no")) {
+					if(heartRegenList == null) heartRegenList = new ArrayList<String>();
+					for(String s : worlds)
+						heartRegenList.add(s);
+				}
+			}
+			
+			//Check for the "change-food-level" setting.
+			if(!config.contains(foodChangePath))
+				log.info(prefix + "Missing setting \"" + foodChangePath + "\" in file " + file.getName() + ". Ignoring it.");
+			else {
+				//Same as above. Default must be true, if there is no valid entry in the setting, it would return false.
+				if(config.getString(foodChangePath).equalsIgnoreCase("false") || config.getString(foodChangePath).equalsIgnoreCase("no")) {
+					if(foodChangeList == null) foodChangeList = new ArrayList<String>();
+					for(String s : worlds)
+						foodChangeList.add(s);
+				}
+			}
+			
+			//Check for the "max-food-level" setting.
+			if(!config.contains(maxFoodLevelPath))
+				log.info(prefix + "Missing setting \"" + maxFoodLevelPath + "\" in file " + file.getName() + ". Ignoring it.");
+			else {
+				//Only add the setting to the database, if it is above or equal to 0. (Invalid entries will return -1)
+				if(config.getInt(maxFoodLevelPath) >= 0) {
+					for(String s : worlds)
+						Database.maxFoodLevel.put(s, config.getInt(maxFoodLevelPath));
+				}
+			}
+			
+			
+			if(!config.contains("food")) {
+				log.info(prefix + "No food section found in file " + file.getName() + ". Ignoring it.");
+				continue;
+			}
+			
+			/*
+			 * Big round of applause for the "values-read-section". That's going to be a mess.
+			 */
+			
+			List<FoodValue> values = new ArrayList<FoodValue>();
+			
+			for(String section : config.getConfigurationSection("food").getKeys(false)) {
+				FoodValue value;
+				{
+					String[] split = section.toUpperCase().split("@");
+					Material mat;
 					
-					if(FoodDataBase.foods.containsKey(world))
-						continue;
-					
-					if(!foodChange) {
-						int max = (config.contains("settings.max-food-level")) ? config.getInt("settings.max-food-level") : 19;
-						foodChanger.put(world, (max < 0 || max > 20) ? 19 : max);
+					try {
+						mat = Material.getMaterial(Integer.parseInt(split[0]));
+					} catch(NumberFormatException e) {
+						mat = Material.getMaterial(split[0]);
 					}
 					
-					if(!heartChange)
-						heartChanger.add(world);
+					if(mat == null) {
+						log.info(prefix + split[0] + " in the food section in the file " + file.getName() + " is not a valid food name. Skipping it.");
+						continue;
+					}
+					if(!mat.isEdible() && mat != Material.MILK_BUCKET && mat != Material.CAKE_BLOCK) {
+						log.info(prefix + mat + " in the food section in the file " + file.getName() +
+								" is not edible and not a MILK_BUCKET or a CAKE_BLOCK. Skipping it.");
+						continue;
+					}
 					
-					FoodDataBase.addWorld(world, config);
+					byte dataValue = 0;
+					if(split.length > 1) {
+						try {
+							dataValue = Byte.parseByte(split[1]);
+						} catch(NumberFormatException e) {
+							log.info(prefix + split[1] + " in the food section for " + mat + " in the file " + file.getName() + 
+									" is not a valid number. Setting it to 0.");
+							dataValue = 0;
+						}
+					}
+					
+					value = new FoodValue(mat, dataValue);
 				}
 				
+				//Check for "hearts"
+				if(config.contains("food." + section + ".hearts")) {
+					RandomValue rand = RandomValue.parseRandomValue(config.getString("food." + section + ".hearts"));
+					
+					if(rand == null)
+						log.info(prefix + "Check value for the path \"food." + section + ".hearts\" in the file " + file.getName() + " again."
+								+ " It couldn't translate the string " + config.getString("food." + section + ".hearts")
+								+ " into something useful (MIN,MAX : eg. -4,3). Ignoring it.");
+					else
+						value.setRegenHearts(RandomValue.parseRandomValue(config.getString("food." + section + ".hearts")));
+				}
 				
+				//Check for "food"
+				if(config.contains("food." + section + ".food")) {
+					int i = getHungerRegenValue(value.getMaterial());
+					RandomValue rand = RandomValue.parseRandomValue(config.getString("food." + section + ".food"));
+					if(rand == null) {
+						log.info(prefix + "Check value for the path \"food." + section + ".food\" in the file " + file.getName() + " again."
+								+ " It couldn't translate the string " + config.getString("food." + section + ".food")
+								+ " into something useful (MIN,MAX : eg. -4,3). Ignoring it.");
+					} else {
+						rand.setMinValue(rand.getMinValue() - i);
+						rand.setMaxValue(rand.getMaxValue() - i);
+						value.setRegenHunger(rand);
+					}
+				}
+				
+				//Check for "saturation"
+				if(config.contains("food." + section + ".saturation")) {
+					double i = getSaturationValue(value.getMaterial());
+					RandomValue rand = RandomValue.parseRandomValue(config.getString("food." + section + ".saturation"));
+					if(rand == null) {
+						log.info(prefix + "Check value for the path \"food." + section + ".saturation\" in the file " + file.getName() + " again."
+								+ " It couldn't translate the string " + config.getString("food." + section + ".food")
+								+ " into something useful (MIN,MAX : eg. -4,3). Ignoring it.");
+					} else {
+						rand.setMinValue(rand.getMinValue() - i);
+						rand.setMaxValue(rand.getMaxValue() - i);
+						value.setSaturation(rand);
+					}
+				}
+				
+				//Check for "potion" effects
+				if(config.contains("food." + section + ".potion")) {
+					String[] params;
+					PotionValue pv;
+					PotionEffectType type;
+					for(String potion : config.getString("food." + section + ".potion").replace("[", "").replace("]", "").replaceAll(" ", "").split(";")) {
+						params = potion.split("/");
+						pv = null;
+						type = null;
+						
+						try {
+							type = PotionEffectType.getById(Integer.parseInt(params[0]));
+						} catch(NumberFormatException e) {
+							type = PotionEffectType.getByName(params[0].toUpperCase());
+						}
+						
+						if(type == null) {
+							log.info(prefix + params[0] + " is not a recognizable potion type. Ignoring it. (File: " + file.getName() + ", Path: food." + section + ".potion)");
+							continue;
+						}
+						
+						pv = new PotionValue(type);
+						
+						switch(params.length) {
+						case 4:
+							try {
+								pv.setProbability(Integer.parseInt(params[3].replaceAll("%", "")));
+							} catch(NumberFormatException e) {
+								log.info(prefix + params[3] + " could not be converted to a valid percentage. Setting probability to 100%. (File: " + file.getName() + ", Path: food." + section + ".potion)");
+							}
+						
+						case 3:
+							RandomValue rv = RandomValue.parseRandomValue(params[2]);
+							if(rv != null)
+								pv.setDuration(rv);
+							else
+								log.info(prefix + params[2] + " could not be converted to a valid number for the duration (MIN,MAX : eg. 5,30). Setting it to 30 seconds. (File: " + file.getName() + ", Path: food." + section + ".potion)");
+						
+						case 2:
+							RandomValue rv2 = RandomValue.parseRandomValue(params[1]);
+							if(rv2 != null)
+								pv.setStrength(rv2);
+							else
+								log.info(prefix + params[1] + " could not be converted to a valid number for the strength (MIN,MAX : eg. 1,4). Setting it to strength 1. (File: " + file.getName() + ", Path: food." + section + ".potion)");
+						}
+						
+						if(value.getPotionEffects().contains(pv))
+							log.info(prefix + "Dublicate: " + pv.getPotion() + " exists more than once. Taking first one. (File: " + file.getName() + ", Path: food." + section + ".potion)");
+						else
+							value.addPotionEffect(pv);
+						
+					}
+				}
+				
+				//Check for other effects
+				if(config.contains("food." + section + ".effect")) {
+					for(String effect : config.getString("food." + section + ".effect").replace("[", "").replace("]", "").replaceAll("; ", ";").split(";")) {
+						EffectValue ev = null;
+						if(effect.toLowerCase().startsWith("xp")) {
+							try {
+								ev = new EffectXP(effect.replaceAll(" ", "").substring(3).split("/"));
+							} catch(IllegalArgumentException e) {
+								log.info(prefix + "Illegal arguments for effects in " + section + " in file " + file.getName() + ": " + e.getLocalizedMessage() + ". (" + effect + ") Ignoring it.");
+								continue;
+							} catch(StringIndexOutOfBoundsException e) {
+								log.info(prefix + "xp effects have to have at least 1 argument (xp/<AMOUNT>/<CHANCE>). (" + section + " in file " + file.getName() + ") Ignoring it.");
+								continue;
+							}
+						} else if(effect.toLowerCase().startsWith("clear")) {
+							if(effect.replaceAll(" ", "").length() > 5)
+								ev = new EffectClear(effect.replaceAll(" ", "").substring(6).split("/"));
+							else
+								ev = new EffectClear(effect.substring(5).split("/"));
+						} else if(effect.toLowerCase().startsWith("burn")) {
+							if(effect.replaceAll(" ", "").length() > 4)
+								ev = new EffectBurn(effect.replaceAll(" ", "").substring(5).split("/"));
+							else
+								ev = new EffectBurn(effect.substring(4).split("/"));
+						} else if(effect.toLowerCase().startsWith("cmd")) {
+							try {
+								if(effect.length() > 3)
+									ev = new EffectCmd(effect.substring(4).split("/"));
+								else
+									ev = new EffectCmd(effect.substring(3).split("/"));
+							} catch(IllegalArgumentException e) {
+								log.info(prefix + "Illegal arguments for effects in " + section + " in file " + file.getName() + " when using \"cmd\": " + e.getLocalizedMessage() + ". (" + effect + ") Ignoring it.");
+								continue;
+							}
+						} else if(effect.toLowerCase().startsWith("cancel")) {
+							value.setCancelled(true);
+							continue;
+						} else if(effect.toLowerCase().startsWith("override")) {
+							value.setOverrideEnabled(true);
+							continue;
+						}
+						
+						if(ev == null) {
+							log.info(prefix + "Could not parse \"" + effect.split("/")[0] + "\" into an effect. Currently there's \"xp\", \"cmd\", \"clear\" and \"burn\". Ignoring it. (File: " + file.getName() + ", Path: food." + section + ".effect)");
+							continue;
+						}
+						
+						if(value.getEffects().contains(ev))
+							log.info(prefix + "Dublicate: " + ev.getName() + " exists more than once. Taking first one. (File: " + file.getName() + ", Path: food." + section + ".effect)");
+						else
+							value.addEffect(ev);
+					}
+				}
+				
+				values.add(value);
 			}
+			Database.effects.put(worlds, values);
 		}
+		
+		if(heartRegenList != null)
+			Bukkit.getPluginManager().registerEvents(new HeartChanger(heartRegenList), this);
+		if(foodChangeList != null)
+			Bukkit.getPluginManager().registerEvents(new FoodChanger(foodChangeList), this);
+		Bukkit.getPluginManager().registerEvents(new MainListener(), this);
+		
+		log.info(prefix + "100% done.");
+		
 	}
 	
-	
-	/**
-	 * Stop the plugin
-	 */
-	@Override
-	public void onDisable() {
-		plugin = null;
-		resourcePath = null;
-		errorPrefix = null;
-		foodChanger = null;
-		heartChanger = null;
-		log.info("[" + getDescription().getName() + "] Closed.");
+	public static int getHungerRegenValue(Material mat) {
+		
+		if(mat == Material.MILK_BUCKET)
+			return 0;
+		if(mat == Material.POTATO_ITEM)
+			return 1;
+		if(mat == Material.CAKE_BLOCK || mat == Material.COOKIE || mat == Material.MELON || mat == Material.POISONOUS_POTATO || mat == Material.RAW_CHICKEN
+				|| mat == Material.RAW_FISH || mat == Material.SPIDER_EYE)
+			return 2;
+		if(mat == Material.PORK || mat == Material.RAW_BEEF)
+			return 3;
+		if(mat == Material.APPLE || mat == Material.CARROT_ITEM || mat == Material.GOLDEN_APPLE || mat == Material.ROTTEN_FLESH)
+			return 4;
+		if(mat == Material.BREAD || mat == Material.COOKED_FISH)
+			return 5;
+		if(mat == Material.BAKED_POTATO || mat == Material.COOKED_CHICKEN || mat == Material.GOLDEN_CARROT || mat == Material.MUSHROOM_SOUP)
+			return 6;
+		if(mat == Material.COOKED_BEEF || mat == Material.GRILLED_PORK || mat == Material.PUMPKIN_PIE)
+			return 8;
+		
+		CustomHealth.plugin.log.severe(CustomHealth.plugin.prefix + "Could not find any values for " + mat + "! Please report immediately if you think, that's a bug!");
+		return 0;
+		
 	}
 	
+	public static float getSaturationValue(Material mat) {
+		
+		if(mat == Material.MILK_BUCKET)
+			return 0F;
+		if(mat == Material.CAKE_BLOCK || mat == Material.COOKIE)
+			return 0.4F;
+		if(mat == Material.POTATO_ITEM)
+			return 0.6F;
+		if(mat == Material.ROTTEN_FLESH)
+			return 0.8F;
+		if(mat == Material.MELON || mat == Material.POISONOUS_POTATO || mat == Material.RAW_CHICKEN || mat == Material.RAW_FISH)
+			return 1.2F;
+		if(mat == Material.PORK || mat == Material.RAW_BEEF)
+			return 1.8F;
+		if(mat == Material.APPLE)
+			return 2.4F;
+		if(mat == Material.SPIDER_EYE)
+			return 3.2F;
+		if(mat == Material.CARROT_ITEM || mat == Material.PUMPKIN_PIE)
+			return 4.8F;
+		if(mat == Material.BREAD || mat == Material.COOKED_FISH)
+			return 6F;
+		if(mat == Material.BAKED_POTATO || mat == Material.COOKED_CHICKEN || mat == Material.MUSHROOM_SOUP)
+			return 7.2F;
+		if(mat == Material.GOLDEN_APPLE)
+			return 9.6F;
+		if(mat == Material.COOKED_BEEF || mat == Material.GRILLED_PORK)
+			return 12.8F;
+		if(mat == Material.GOLDEN_CARROT)
+			return 14.4F;
+		
+		CustomHealth.plugin.log.severe(CustomHealth.plugin.prefix + "Could not find any values for " + mat + "! Please report immediately if you think, that's a bug!");
+		return 0;
+	}
 	
-	/**
-	 * Get the CustomHealth plugin
-	 * @return (static) this
-	 */
+	public static String getResourcePath() {
+		return plugin.resourcePath;
+	}
+	
+	public static String saveTemplate() {
+		plugin.saveResource("template0x0159.yml", true);
+		int x = 0;
+		while(new File("plugins/CustomHealth/worlds/" + x + ".yml").exists())
+			x++;
+		new File("plugins/CustomHealth/template0x0159.yml").renameTo(new File("plugins/CustomHealth/worlds/" + x + ".yml"));
+		return "plugins/CustomHealth/worlds/" + x + ".yml";
+	}
+	
+	public static void reload() {
+		plugin.onDisable();
+		plugin.onEnable();
+	}
+	
 	public static CustomHealth getPlugin() {
 		return plugin;
 	}
 	
-	
-	/**
-	 * Reload the plugin
-	 */
-	public static void reloadPlugin() {
-		plugin.reloadConfig();
-		new FoodDataBase(plugin.getConfig());
-		loadWorldConfig();
+	public static String[] getVersions() throws IOException, SAXException, ParserConfigurationException {
+		String[] versions = {plugin.getDescription().getVersion(), null, null};
+		
+		URL filesFeed = new URL("http://dev.bukkit.org/bukkit-plugins/custom-health/files.rss");
+		InputStream input = filesFeed.openConnection().getInputStream();
+		
+		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(input);
+		
+		Node latestFile = document.getElementsByTagName("item").item(0);
+		NodeList children = latestFile.getChildNodes();
+		
+		String version = children.item(1).getTextContent();
+		String website = children.item(3).getTextContent();
+		
+		if(!version.replaceAll("[a-zA-Z ]", "").equals(versions[0])) {
+			versions[1] = version;
+			versions[2] = website;
+		}
+		
+		input.close();
+		return versions;
 	}
 	
-	
-	/**
-	 * Is the food level changing?
-	 * @return true, if that's the case
-	 */
-	public static boolean isFoodLevelChanging(World world) {
-		return !foodChanger.containsKey(world);
-	}
-	
-	/**
-	 * Get the max food level
-	 * @return maxFoodLevel
-	 */
-	public static int getMaxFoodLevel(World world) {
-		return (isFoodLevelChanging(world)) ? foodChanger.get(world) : -1;
-	}
-	
-	
-	/**
-	 * Check, if the heart level should be changing or not
-	 * @param world
-	 * @return
-	 */
-	public static boolean isHeartLevelChanging(World world) {
-		return !heartChanger.contains(world);
-	}
-	
-	
-	/**
-	 * Display an error message to the console
-	 * @param message
-	 */
-	public static void displayErrorMessage(String message) {
-		System.err.println(errorPrefix + message);
-	}
-	
-	
-	/**
-	 * Get the resource path "plugins/CustomHealth/"
-	 * @return
-	 */
-	public static String getResourcePath() {
-		return resourcePath;
-	}
-	
-	/**
-	 * Get template
-	 * @return
-	 */
-	public static YamlConfiguration getTemplate() {
-		return template;
+	public void onDisable() {
+		//Avoid memory leaks and set all static instances to null
+		Database.free();
+		plugin = null;
+		System.gc();
 	}
 }
