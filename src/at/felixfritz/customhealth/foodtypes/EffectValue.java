@@ -1,105 +1,52 @@
 package at.felixfritz.customhealth.foodtypes;
 
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.entity.Player;
 
-import at.felixfritz.customhealth.util.FloatValue;
-import at.felixfritz.customhealth.util.IntValue;
-
-
-public class EffectValue {
+public abstract class EffectValue {
 	
-	private int effect = -1;
-	private FloatValue probability = new FloatValue(1F, 1F);
-	private IntValue duration = new IntValue(30, 30);
-	private IntValue strength = new IntValue();
+	private final String name;
+	private float probability;
+	private final String[] parameters;
 	
-	public EffectValue() {
-		initialize(effect, probability, duration, strength);
-	}
-	
-	public EffectValue(int effect) {
-		initialize(effect, probability, duration, strength);
-	}
-	
-	public EffectValue(int effect, FloatValue probability) {
-		initialize(effect, probability, duration, strength);
-	}
-	
-	public EffectValue(int effect, FloatValue probability, IntValue duration) {
-		initialize(effect, probability, duration, strength);
-	}
-	
-	public EffectValue(int effect, FloatValue probability, IntValue duration, IntValue strength) {
-		initialize(effect, probability, duration, strength);
-	}
-	
-	private void initialize(int effect, FloatValue probability, IntValue duration, IntValue strength) {
-		setEffect(effect);
-		setProbability(probability);
-		setDuration(duration);
-		setStrength(strength);
-	}
-	
-	public void setEffect(int effect) {
-		this.effect = effect;
-	}
-	
-	public void setProbability(FloatValue probability) {
-		this.probability = probability;
-	}
-	
-	public FloatValue getProbability() {
-		return probability;
-	}
-	
-	public void setDuration(IntValue duration) {
-		this.duration.setMin(duration.getMin() >= 0 ? duration.getMin() : 30);
-		this.duration.setMax(duration.getMax() >= 0 ? duration.getMax() : 30);
-	}
-	
-	public IntValue getDuration() {
-		return duration;
-	}
-	
-	public void setStrength(IntValue strength) {
-		this.strength = strength.decrementAll();
-	}
-	
-	public IntValue getStrength() {
-		return strength;
-	}
-	
-	public int getEffect() {
-		return effect;
-	}
-	
-	public boolean hasValidEffect() {
-		if(effect == 0)
-			return true;
-		try {
-			PotionEffectType.getById(effect);
-			return true;
-		} catch(Exception e) {
-			return false;
-		}
-	}
-	
-	public String getName() {
-		if(effect == 0)
-			return duration.toString() + " XP";
-		if(effect < 0)
-			return "Remove all effects";
+	public EffectValue(String name, String[] parameters) {
+		if(name == null)
+			throw new NullPointerException("Name can not be null!");
 		
-		return PotionEffectType.getById(effect).getName();
+		this.name = name;
+		this.parameters = parameters;
+		this.probability = 1f;
+	}
+	
+	public final String getName() {
+		return name;
+	}
+	
+	public final String[] getParameters() {
+		return parameters;
+	}
+	
+	public final void setProbability(float probability) {
+		if(probability >= 0 && probability <= 100)
+			this.probability = probability;
+	}
+	
+	public final void setProbability(int percentage) {
+		setProbability(((float) percentage) / 100f);
+	}
+	
+	public final float getProbability() {
+		return probability;
 	}
 	
 	@Override
 	public boolean equals(Object o) {
-		
-		if(o instanceof EffectValue) {
-			return effect == ((EffectValue) o).effect;
-		}
-		
+		if(o instanceof String)
+			return ((String) o).equalsIgnoreCase(name);
+		if(o instanceof EffectValue)
+			return ((EffectValue) o).name.equalsIgnoreCase(name);
 		return false;
 	}
+	
+	public abstract void applyEffect(Player p);
+	
 }
