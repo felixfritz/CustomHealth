@@ -4,169 +4,166 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
-import at.felixfritz.customhealth.util.FloatValue;
-import at.felixfritz.customhealth.util.IntValue;
+import at.felixfritz.customhealth.util.RandomValue;
 
-/**
- * The FoodValue: An object, that contains the material, 
- * the amount of hearts it regenerates and the amount of hunger bars it fills up
- * @author felixfritz
- *
- */
 public class FoodValue {
 	
-	private String name;
-	private IntValue regenHearts = new IntValue();
-	private IntValue regenHunger = new IntValue();
-	private FloatValue saturation = new FloatValue();
-	private List<EffectValue> effects = new ArrayList<EffectValue>();
+	private Material material;
+	private byte dataValue;
+	private RandomValue regenHearts;
+	private RandomValue regenHunger;
+	private RandomValue saturation;
 	
-	/**
-	 * Set it to a specific material. It will regenerate 0 hearts and 0 hunger bars!
-	 * @param foodName
-	 */
-	public FoodValue(String foodName) {
-		initialize(foodName, regenHearts, regenHunger, saturation, effects);
+	private List<EffectValue> effects;
+	private List<PotionValue> potions;
+	
+	private boolean cancel;
+	private boolean override;
+	
+	public FoodValue(Material material, byte dataValue) {
+		this(material, dataValue, new RandomValue(0, 0), new RandomValue(0, 0), new RandomValue(0, 0));
 	}
 	
-	public FoodValue(String foodName, IntValue regenHearts, IntValue regenHunger) {
-		initialize(foodName, regenHearts, regenHunger, saturation, effects);
+	public FoodValue(Material material, byte dataValue, RandomValue regenHearts, RandomValue regenHunger) {
+		this(material, dataValue, regenHearts, regenHunger, new RandomValue(0, 0));
 	}
 	
-	public FoodValue(String foodName, IntValue regenHearts, IntValue regenHunger, FloatValue saturation) {
-		initialize(foodName, regenHearts, regenHunger, saturation, effects);
+	public FoodValue(Material material, byte dataValue, RandomValue regenHearts, RandomValue regenHunger, RandomValue saturation) {
+		
+		if(material == null || regenHearts == null || regenHunger == null || saturation == null)
+			throw new NullPointerException("Parameters may not be null!");
+		
+		this.material = material;
+		this.dataValue = dataValue;
+		this.regenHearts = regenHearts;
+		this.regenHunger = regenHunger;
+		this.saturation = saturation;
+		
+		this.effects = new ArrayList<EffectValue>();
+		this.potions = new ArrayList<PotionValue>();
+		
+		this.cancel = false;
+		this.override = false;
 	}
 	
-	public FoodValue(String foodName, IntValue regenHearts, IntValue regenHunger, FloatValue saturation, List<EffectValue> effects) {
-		initialize(foodName, regenHearts, regenHunger, saturation, effects);
+	public Material getMaterial() {
+		return material;
 	}
 	
-	public FoodValue(String foodName, int minHearts, int maxHearts, int minHunger, int maxHunger) {
-		initialize(foodName, new IntValue(minHearts, maxHearts), new IntValue(minHunger, maxHunger), saturation, effects);
+	public byte getDataValue() {
+		return dataValue;
 	}
 	
-	public FoodValue(String foodName, int minHearts, int maxHearts, int minHunger, int maxHunger, float minSaturation, float maxSaturation) {
-		initialize(foodName, new IntValue(minHearts, maxHearts), new IntValue(minHunger, maxHunger), new FloatValue(minSaturation, maxSaturation), effects);
-	}
-	
-	public FoodValue(String foodName, int minHearts, int maxHearts, int minHunger, int maxHunger, float minSaturation, float maxSaturation, List<EffectValue> effects) {
-		initialize(foodName, new IntValue(minHearts, maxHearts), new IntValue(minHunger, maxHunger), new FloatValue(minSaturation, maxSaturation), effects);
-	}
-	
-	
-	
-	private void initialize(String foodName, IntValue regenHearts, IntValue regenHunger, FloatValue saturation, List<EffectValue> effects) {
-		setName(foodName);
-		setRegenHearts(regenHearts);
-		setRegenHunger(regenHunger);
-		setSaturation(saturation);
-		setEffects(effects);
-	}
-	
-	
-	private void setName(String foodName) {
-		this.name = foodName.toUpperCase();
-	}
-	
-	/**
-	 * Get the name of the food
-	 * @return foodName
-	 */
-	public String getName() {
-		return this.name;
-	}
-	
-	
-	/**
-	 * Get the food as a material
-	 * @return material
-	 */
-	public Material getFood() {
-		return Material.valueOf((name.equalsIgnoreCase("enchanted_golden_apple")) ? "GOLDEN_APPLE" : name);
-	}
-	
-	
-	
-	public IntValue getRegenHearts() {
+	public RandomValue getRegenHearts() {
 		return regenHearts;
 	}
 	
-	
-	public void setRegenHearts(IntValue regenHearts) {
-		this.regenHearts = regenHearts;
+	public void setRegenHearts(RandomValue regenHearts) {
+		if(regenHearts != null)
+			this.regenHearts = regenHearts;
 	}
 	
-	
-	public IntValue getRegenHunger() {
+	public RandomValue getRegenHunger() {
 		return regenHunger;
 	}
 	
-	
-	public void setRegenHunger(IntValue regenHunger) {
-		this.regenHunger = regenHunger;
+	public void setRegenHunger(RandomValue regenHunger) {
+		if(regenHunger != null)
+			this.regenHunger = regenHunger;
 	}
 	
-	
-	public FloatValue getSaturation() {
+	public RandomValue getSaturation() {
 		return saturation;
 	}
 	
-	
-	public void setSaturation(FloatValue saturation) {
-		this.saturation = saturation;
+	public void setSaturation(RandomValue saturation) {
+		if(saturation != null)
+			this.saturation = saturation;
 	}
 	
-	
-	/**
-	 * Set the effects
-	 * @param effects
-	 */
-	public void setEffects(List<EffectValue> effects) {
-		this.effects = effects;
-	}
-	
-	
-	/**
-	 * Get the effects
-	 * @return effects
-	 */
 	public List<EffectValue> getEffects() {
 		return effects;
 	}
 	
-	
-	/**
-	 * Add an effect
-	 * @param effect
-	 * @return false, when effect already exists
-	 */
-	public boolean addEffect(EffectValue effect) {
-		for(EffectValue value : effects) {
-			if(value.equals(effect))
-				return false;
-		}
-		this.effects.add(effect);
-		return true;
+	public void addEffect(EffectValue effect) {
+		if(effect != null)
+			effects.add(effect);
 	}
 	
+	public EffectValue getEffect(String name) {
+		int x;
+		if((x = effects.indexOf(name)) >= 0)
+			return effects.get(x);
+		return null;
+	}
 	
-	/**
-	 * Remove effect
-	 * @param effect
-	 * @return false, if effect didn't exist
-	 */
-	public boolean removeEffect(EffectValue effect) {
-		for(EffectValue value : effects) {
-			if(value.equals(effect)) {
-				effects.remove(effect);
-				return true;
-			}
-		}
+	public List<PotionValue> getPotionEffects() {
+		return potions;
+	}
+	
+	public void addPotionEffect(PotionValue potion) {
+		if(potion != null)
+			potions.add(potion);
+	}
+	
+	public boolean isCancelled() {
+		return this.cancel;
+	}
+	
+	public void setCancelled(boolean cancel) {
+		this.cancel = cancel;
+	}
+	
+	public boolean isOverrideEnabled() {
+		return this.override;
+	}
+	
+	public void setOverrideEnabled(boolean override) {
+		this.override = override;
+	}
+	
+	@SuppressWarnings("deprecation")
+	@Override
+	public boolean equals(Object o) {
+		if(o == null) return false;
+		
+		if(o instanceof Material)
+			return o == material;
+		if(o instanceof ItemStack)
+			return ((ItemStack) o).getType() == material && ((ItemStack) o).getData().getData() == dataValue;
+		if(o instanceof FoodValue)
+			return ((FoodValue) o).material == material && ((FoodValue) o).dataValue == dataValue;
+		
 		return false;
 	}
 	
+	@Override
 	public String toString() {
-		return name + ", " + regenHearts + " hearts, " + regenHunger + " hunger, " + saturation + " saturation.";
+		StringBuilder sb = new StringBuilder().append(material).append('@').append(dataValue).append(", ").append(regenHearts.toString()).append(" hearts, ")
+				.append(regenHunger.toString()).append(" food bars, ").append(saturation.toString()).append(" saturation, ")
+				.append(effects.size()).append(" effects");
+		
+		if(effects.size() > 0) {
+			sb.append(" (");
+			for(EffectValue v : effects) {
+				sb.append(v.getName()).append(", ");
+			}
+			sb.delete(sb.length() - 2, sb.length()).append(')');
+		}
+		
+		sb.append(", ").append(potions.size() + " potion effects");
+		
+		if(potions.size() > 0) {
+			sb.append(" (");
+			for(PotionValue v : potions) {
+				sb.append(v.getPotion()).append(", ");
+			}
+			sb.delete(sb.length() - 2, sb.length()).append(')');
+		}
+		
+		return sb.append('.').toString();
 	}
+	
 }
