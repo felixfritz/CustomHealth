@@ -14,6 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
 import org.w3c.dom.Document;
@@ -51,6 +52,10 @@ public class CustomHealth extends JavaPlugin {
 		log.info(prefix + "Loaading up CustomHealth v" + getDescription().getVersion() + ".");
 		
 		saveResource("effects.txt", true);
+		
+		reloadConfig();
+		saveDefaultConfig();
+		getConfig().options().copyDefaults(true);
 		
 		resourcePath = "plugins/" + getDescription().getName() + "/";
 		if(!new File(resourcePath + "worlds/").exists())
@@ -454,12 +459,18 @@ public class CustomHealth extends JavaPlugin {
 	}
 	
 	public static void reload() {
-		plugin.onDisable();
+		HandlerList.unregisterAll(plugin);
+		Database.free();
+		System.gc();
 		plugin.onEnable();
 	}
 	
 	public static CustomHealth getPlugin() {
 		return plugin;
+	}
+	
+	public static boolean isUpdateCheckingEnabled() {
+		return plugin.getConfig().getBoolean("check-for-updates");
 	}
 	
 	public static String[] getVersions() throws IOException, SAXException, ParserConfigurationException {

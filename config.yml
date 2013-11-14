@@ -1,0 +1,8 @@
+###################
+#  Custom Health  #
+#  Configuration  #
+###################
+# 
+# Do you want the plugin to search for a new
+# update when the command "/ch plugin" is typed in?
+check-for-updates: true

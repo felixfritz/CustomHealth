@@ -224,20 +224,23 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		sender.sendMessage(ChatColor.LIGHT_PURPLE + CustomHealth.getPlugin().getDescription().getName() + 
 				", v" + CustomHealth.getPlugin().getDescription().getVersion() + " by " + CustomHealth.getPlugin().getDescription().getAuthors().get(0));
 		sender.sendMessage(ChatColor.LIGHT_PURPLE + "BukkitDev page: " + CustomHealth.getPlugin().getDescription().getWebsite());
-		sender.sendMessage(ChatColor.LIGHT_PURPLE + "Checking for updates...");
 		
-		try {
-			String[] versions = CustomHealth.getVersions();
-			if(versions[1] == null)
-				sender.sendMessage(ChatColor.GREEN + "Plugin is up to date!");
-			else {
-				sender.sendMessage(ChatColor.GREEN + "Update available. Current version: " + versions[0] + ", latest version: " + versions[1] + ".");
-				sender.sendMessage(ChatColor.GREEN + "Download here: " + versions[2]);
+		if(CustomHealth.isUpdateCheckingEnabled()) {
+			sender.sendMessage(ChatColor.LIGHT_PURPLE + "Checking for updates...");
+			
+			try {
+				String[] versions = CustomHealth.getVersions();
+				if(versions[1] == null)
+					sender.sendMessage(ChatColor.GREEN + "Plugin is up to date!");
+				else {
+					sender.sendMessage(ChatColor.GREEN + "Update available. Current version: " + versions[0] + ", latest version: " + versions[1] + ".");
+					sender.sendMessage(ChatColor.GREEN + "Download here: " + versions[2]);
+				}
+			} catch (Exception e) {
+				sender.sendMessage(ChatColor.RED + "Had difficulties while talking to the server (" + e.getLocalizedMessage() + ")");
 			}
-		} catch (Exception e) {
-			sender.sendMessage(ChatColor.RED + "Had difficulties while talking to the server (" + e.getLocalizedMessage() + ")");
-			sender.sendMessage(ChatColor.RED + "Check server log for more information.");
-			e.printStackTrace();
+		} else {
+			sender.sendMessage(ChatColor.LIGHT_PURPLE + "Update checking disabled.");
 		}
 		return true;
 	}
