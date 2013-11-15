@@ -35,6 +35,11 @@ import at.felixfritz.customhealth.foodtypes.effects.EffectCmd;
 import at.felixfritz.customhealth.foodtypes.effects.EffectXP;
 import at.felixfritz.customhealth.util.RandomValue;
 
+/**
+ * Main CustomHealth class. Very very very important.
+ * @author felixfritz
+ * @version 0.6
+ */
 public class CustomHealth extends JavaPlugin {
 	
 	private Logger log = Logger.getLogger("Minecraft");
@@ -93,7 +98,7 @@ public class CustomHealth extends JavaPlugin {
 			if(file.getName().endsWith(".yml")) list.add(file);
 		}
 		
-		//Create instance of YamlConfiguration. This is coning to be used in the for-loop.
+		//Create instance of YamlConfiguration. This is going to be used in the for-loop.
 		YamlConfiguration config;
 		String heartRegenPath = "settings.regain-health";		//Save path of regain-health as an instance.
 		String foodChangePath = "settings.change-food-level";	//Save path of change-food-level as an instance.
