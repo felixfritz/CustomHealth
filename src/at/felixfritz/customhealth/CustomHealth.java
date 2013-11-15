@@ -2,13 +2,10 @@ package at.felixfritz.customhealth;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.bukkit.Bukkit;
@@ -17,9 +14,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import at.felixfritz.customhealth.commands.CommandMain;
@@ -34,6 +28,8 @@ import at.felixfritz.customhealth.foodtypes.effects.EffectClear;
 import at.felixfritz.customhealth.foodtypes.effects.EffectCmd;
 import at.felixfritz.customhealth.foodtypes.effects.EffectXP;
 import at.felixfritz.customhealth.util.RandomValue;
+import at.felixfritz.customhealth.util.Updater;
+import at.felixfritz.customhealth.util.Updater.UpdateResult;
 
 /**
  * Main CustomHealth class. Very very very important.
@@ -547,36 +543,24 @@ public class CustomHealth extends JavaPlugin {
 	 * @throws SAXException
 	 * @throws ParserConfigurationException
 	 */
-	public static String[] getVersions() throws IOException, SAXException, ParserConfigurationException {
+	public static String[] getVersions() throws Exception {
 		//Create string array, first index is current version, index 2 and 3 will be informations about newer version on dev.bukkit.org, if available
 		String[] versions = {plugin.getDescription().getVersion(), null, null};
 		
 		//Connect to rss-feed of the custom-health project in dev.bukkit.org, can throw IOException
-		URL filesFeed = new URL("http://dev.bukkit.org/bukkit-plugins/custom-health/files.rss");
-		InputStream input = filesFeed.openConnection().getInputStream();
+		Updater updater = new Updater(plugin, 56474, plugin.getFile(), Updater.UpdateType.NO_DOWNLOAD, false);
 		
-		//Transform InputStream into a readable rss-feed document
-		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(input);
-		
-		Node latestFile = document.getElementsByTagName("item").item(0);	//Get first item-tag in document (which represents the newest file)
-		NodeList children = latestFile.getChildNodes();						//Get all nodes inside the first item-tag
-		
-		//Get item 1 and 3, which are the name and the hyperlink (index 0 and 2 are whitespace that also count as an index)
-		String version = children.item(1).getTextContent();
-		String website = children.item(3).getTextContent();
-		
-		//Check, if version number is the same as in this file stated
-		if(!version.replaceAll("[a-zA-Z ]", "").equals(versions[0])) {
-			/*
-			 * Version numbers are not the same, repeat: Version numbers are not the same!
-			 * Replace null-objects in versions-array (index 1 and 2) with latest version number and update homepage
-			 */
-			versions[1] = version;
-			versions[2] = website;
+		if(updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
+			versions[1] = updater.getLatestName().replaceAll("[a-zA-Z ]", "");
+			versions[2] = updater.getLatestFileLink();
+		} else if(updater.getResult() != UpdateResult.NO_UPDATE) {
+			if(updater.getResult() == UpdateResult.FAIL_DBO)
+				throw new Exception("Could not connect to dev.bukkit.org - are you online?");
+			if(updater.getResult() == UpdateResult.FAIL_APIKEY)
+				throw new Exception("Admin might have improperly configured the API");
+			throw new Exception("Unknown reason, check server log");
 		}
 		
-		//Close input and return versions-array
-		input.close();
 		return versions;
 	}
 	
