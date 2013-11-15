@@ -51,25 +51,36 @@ public class CustomHealth extends JavaPlugin {
 		
 		log.info(prefix + "Loaading up CustomHealth v" + getDescription().getVersion() + ".");
 		
+		//Save effects.txt in CustomHealth directory. Overwrite all existent files
 		saveResource("effects.txt", true);
 		
+		//Load up configurations
 		reloadConfig();
 		saveDefaultConfig();
 		getConfig().options().copyDefaults(true);
 		
+		//Create instance of resource path and make sure, the directory "plugins/CustomHealth/worlds/" exists
 		resourcePath = "plugins/" + getDescription().getName() + "/";
 		if(!new File(resourcePath + "worlds/").exists())
 			new File(resourcePath + "worlds/").mkdir();
 		
+		//Initialize worlds
 		initializeWorlds();
+		//Listen for the command "/chealth"
 		getCommand("chealth").setExecutor(new CommandMain());
 		
+		//Save static plugin instance. For all of you against static referencing, screw you, I know what I'm doing. I'm a professional. Especially with commenting. I know when to comment and how long comments should be. They should not be longer than necessary, but long enough to understand the context. Understood? Good.
 		plugin = this;
 	}
 	
 	
 	/**
-	 * Load up all the world settings and save them in the database
+	 * Load up all the world settings and save them in the database.
+	 * This, at first glance, looks like a big chunk of messy code, but trust me...
+	 * well, it is actually a big chunk of messy code.
+	 * 
+	 * But on the bright side, putting all of the load-up in one method is great,
+	 * because you can collapse it all in eclipse and don't have to look at it again!
 	 */
 	@SuppressWarnings("deprecation")
 	private void initializeWorlds() {
@@ -385,6 +396,13 @@ public class CustomHealth extends JavaPlugin {
 		
 	}
 	
+	
+	/**
+	 * Unfortunately, I did not find something like an "ItemFood" that would tell me,
+	 * how much an apple would regenerate. Therefore this method exists.
+	 * @param mat that has to be checked
+	 * @return amount of food bars, that are filled up
+	 */
 	public static int getHungerRegenValue(Material mat) {
 		
 		if(mat == Material.MILK_BUCKET)
@@ -410,6 +428,14 @@ public class CustomHealth extends JavaPlugin {
 		
 	}
 	
+	
+	
+	/**
+	 * Unfortunately, I did not find something like an "ItemFood" that would tell me,
+	 * how much an apple would saturate. Therefore this method exists.
+	 * @param mat that has to be checked
+	 * @return saturation, that are filled up
+	 */
 	public static float getSaturationValue(Material mat) {
 		
 		if(mat == Material.MILK_BUCKET)
@@ -445,53 +471,106 @@ public class CustomHealth extends JavaPlugin {
 		return 0;
 	}
 	
+	
+	/**
+	 * Get resource path of plugin (plugin/CustomHealth/)
+	 * @return resourcePath
+	 */
+	
 	public static String getResourcePath() {
 		return plugin.resourcePath;
 	}
 	
+	
+	/**
+	 * Create and save template in "worlds" directory.
+	 * @return name of the file (including directory)
+	 */
 	public static String saveTemplate() {
+		//Save file in the CustomHealth-directory. "true" - override file, if existent (which usually isn't)
 		plugin.saveResource("template0x0159.yml", true);
+		
+		/*
+		 * To avoid overriding issues in worlds-directory, x will step in and make sure to create a file that doesn't exist yet.
+		 * This could potentially break, if the user created 4.294.967.295 yml-files and named them -2.147.483.648, -2.147.483.647 and so on until 2.147.483.647
+		 * Good luck with that!
+		 */
 		int x = 0;
 		while(new File("plugins/CustomHealth/worlds/" + x + ".yml").exists())
 			x++;
+		
+		//Create file and return filename
 		new File("plugins/CustomHealth/template0x0159.yml").renameTo(new File("plugins/CustomHealth/worlds/" + x + ".yml"));
 		return "plugins/CustomHealth/worlds/" + x + ".yml";
 	}
 	
+	
+	/**
+	 * Reload plugin
+	 */
 	public static void reload() {
-		HandlerList.unregisterAll(plugin);
-		Database.free();
-		System.gc();
-		plugin.onEnable();
+		HandlerList.unregisterAll(plugin);	//Unregister all listeners that the plugin is listening for
+		Database.free();					//Free space by setting static objects in Database to null
+		plugin.onEnable();					//Now that it's all gone, act as if the plugin would upload freshly
 	}
 	
+	
+	/**
+	 * Get plugin instance. Tried to avoid this method, but for some scheduling I had to use it (and I didn't want to hand around object instances)
+	 * @return CustomHealth
+	 */
 	public static CustomHealth getPlugin() {
 		return plugin;
 	}
 	
+	
+	/**
+	 * Check, if the update checking feature is enabled
+	 * @return true, if it should check for updates
+	 */
 	public static boolean isUpdateCheckingEnabled() {
 		return plugin.getConfig().getBoolean("check-for-updates");
 	}
 	
+	
+	/**
+	 * Get newest versions (only called, when update checking is enabled)
+	 * 
+	 * See also the tutorial: http://www.youtube.com/watch?v=vlu6Tk0uPQA
+	 * @return string array, containing current version, "online" version and homepage for newest version (if available)
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
 	public static String[] getVersions() throws IOException, SAXException, ParserConfigurationException {
+		//Create string array, first index is current version, index 2 and 3 will be informations about newer version on dev.bukkit.org, if available
 		String[] versions = {plugin.getDescription().getVersion(), null, null};
 		
+		//Connect to rss-feed of the custom-health project in dev.bukkit.org, can throw IOException
 		URL filesFeed = new URL("http://dev.bukkit.org/bukkit-plugins/custom-health/files.rss");
 		InputStream input = filesFeed.openConnection().getInputStream();
 		
+		//Transform InputStream into a readable rss-feed document
 		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(input);
 		
-		Node latestFile = document.getElementsByTagName("item").item(0);
-		NodeList children = latestFile.getChildNodes();
+		Node latestFile = document.getElementsByTagName("item").item(0);	//Get first item-tag in document (which represents the newest file)
+		NodeList children = latestFile.getChildNodes();						//Get all nodes inside the first item-tag
 		
+		//Get item 1 and 3, which are the name and the hyperlink (index 0 and 2 are whitespace that also count as an index)
 		String version = children.item(1).getTextContent();
 		String website = children.item(3).getTextContent();
 		
+		//Check, if version number is the same as in this file stated
 		if(!version.replaceAll("[a-zA-Z ]", "").equals(versions[0])) {
+			/*
+			 * Version numbers are not the same, repeat: Version numbers are not the same!
+			 * Replace null-objects in versions-array (index 1 and 2) with latest version number and update homepage
+			 */
 			versions[1] = version;
 			versions[2] = website;
 		}
 		
+		//Close input and return versions-array
 		input.close();
 		return versions;
 	}
