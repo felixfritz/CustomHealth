@@ -26,7 +26,7 @@ public abstract class EffectValue {
 	}
 	
 	public final void setProbability(float probability) {
-		if(probability >= 0 && probability <= 100)
+		if(probability >= 0 && probability <= 1)
 			this.probability = probability;
 	}
 	
