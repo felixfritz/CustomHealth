@@ -16,32 +16,47 @@ import org.bukkit.permissions.Permission;
 
 import at.felixfritz.customhealth.CustomHealth;
 
+/**
+ * Main command class... Currently also the only one...
+ * 
+ * @author felixfritz
+ * @version 0.6
+ */
 public class CommandMain implements CommandExecutor, TabCompleter {
 	
+	//List of player names, used for "cool-down" when resetting plugin (see commandReset and tmpChat method)
 	private List<String> players;
 	
 	public CommandMain() {
 		this.players = new ArrayList<String>();
 	}
 	
+	/**
+	 * Main command listener. You should be all familiar with it, I hope.
+	 */
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		
+		//Check, if player has any permission at this point. If not, escape this thing.
 		if(!hasAnyPermission(sender)) {
 			sender.sendMessage("Unknown command. Type \"help\" for help.");
 			return true;
 		}
 		
+		//Check, if player is in the "cool-down" list. If so, go to the tmpChat method and escape this method.
 		if(players.contains(sender.getName())) {
 			tmpChat(sender, args);
 			return true;
 		}
 		
+		//All commands have to be at least 1 argument long
 		if(args.length > 0) {
 			
+			//"create" argument, create new templates. See commandCreate method for more.
 			if(args[0].equalsIgnoreCase("create") && sender.hasPermission("customhealth.commands.create")) {
 				int amount = 1;
 				if(args.length > 1) {
+					//More than 1 argument, so the player must've stated, how many files he needed.
 					try {
 						amount = Integer.parseInt(args[1]);
 					} catch(NumberFormatException e) {
@@ -52,25 +67,31 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				return commandCreate(sender, amount);
 			}
 			
+			//"rename" argument, see commandRename method for more.
 			if(args[0].equalsIgnoreCase("rename") && args.length > 2 && sender.hasPermission("customhealth.commands.rename"))
 				return commandRename(sender, args[1], args[2]);
 			
+			//"reload" argument, see static method reload() in CustomHealth for more.
 			if(args[0].equalsIgnoreCase("reload") && sender.hasPermission("customhealth.commands.reload")) {
 				CustomHealth.reload();
 				return true;
 			}
 			
+			//"reset" argument, see commandReset method for more.
 			if(args[0].equalsIgnoreCase("reset") && sender.hasPermission("customhealth.commands.reset"))
 				return commandReset(sender);
 			
+			//"plugin" argument, see commandPlugin for more.
 			if(args[0].equalsIgnoreCase("plugin") && sender.hasPermission("customhealth.commands.plugin"))
 				return commandPlugin(sender);
 			
+			//"set" argument, currently inactive but reserved for later usage.
 			if(args[0].equalsIgnoreCase("set")) {
 				sender.sendMessage(ChatColor.RED + "\"set\" command is under construction, don't ya worry!");
 				return true;
 			}
 			
+			//"info" argument, removed for now. If someone really misses that command, call me now.
 			if(args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("get")) {
 				sender.sendMessage(ChatColor.RED + "This command didn't seem to fit well into the plugin. If you're missing it though, "
 						+ "kindly ask the author to re-implement it again.");
@@ -78,28 +99,49 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			}
 		}
 		
+		//If one of the arguments were successful, it should have escaped it immediately.
+		//In this case, either there were no arguments or the arguments given were not that useful, so send a help page.
 		sendHelpMenu(sender);
 		return true;
 	}
 	
-	
+	/**
+	 * Send help menu to CommandSender.
+	 * @param sender
+	 */
 	private void sendHelpMenu(CommandSender sender) {
 		String prefix = ChatColor.GRAY + "/ch " + ChatColor.GOLD;
 		String suffix = ChatColor.GRAY + ": ";
 		
 		sender.sendMessage(ChatColor.GRAY + "========[ " + ChatColor.GOLD + "CustomHealth" + ChatColor.GRAY + " ]========");
-		sender.sendMessage(prefix + "create (#)" + suffix + "Create 1 or (#) world templates to work with.");
-		sender.sendMessage(prefix + "rename <from> <to>" + suffix + "Rename configuration file");
-		sender.sendMessage(prefix + "reload" + suffix + "Reload the plugin.");
-		sender.sendMessage(prefix + "reset" + suffix + "Reset all world configurations.");
-		sender.sendMessage(prefix + "plugin" + suffix + "Information about this plugin, check for updates.");
+		if(sender.hasPermission("customhealth.commands.create"))
+			sender.sendMessage(prefix + "create (#)" + suffix + "Create 1 or (#) world templates to work with.");
+		if(sender.hasPermission("customhealth.commands.rename"))
+			sender.sendMessage(prefix + "rename <from> <to>" + suffix + "Rename configuration file");
+		if(sender.hasPermission("customhealth.commands.reload"))
+			sender.sendMessage(prefix + "reload" + suffix + "Reload the plugin.");
+		if(sender.hasPermission("customhealth.commands.reset"))
+			sender.sendMessage(prefix + "reset" + suffix + "Reset all world configurations.");
+		if(sender.hasPermission("customhealth.commands.plugin"))
+			sender.sendMessage(prefix + "plugin" + suffix + "Information about this plugin, check for updates.");
 	}
 	
+	/**
+	 * Create method, creates creative templates to create creativity in it. So creative.
+	 * 
+	 * Saves template from main CustomHealth class.
+	 * @see at.felixfritz.customhealth.CustomHealth#saveTemplate()
+	 * @param sender
+	 * @param amount
+	 * @return true. Always. It's just to make things look small and neat.
+	 */
 	private boolean commandCreate(CommandSender sender, int amount) {
+		//Name files "groupA.yml", "groupB.yml" and so on
 		char letter = 'A';
 		for(int x = 0; x < amount; x++) {
 			String fileName = CustomHealth.getResourcePath() + "worlds/group" + letter + ".yml";
 			
+			//Check, if file with the name "group<letter>.yml" exists. If so, increase letter by 1.
 			while(new File(fileName).exists()) {
 				letter++;
 				if(letter > 'Z') {
@@ -111,9 +153,11 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				fileName = CustomHealth.getResourcePath() + "worlds/group" + letter + ".yml";
 			}
 			
+			//Save file
 			String path = CustomHealth.saveTemplate();
 			new File(path).renameTo(new File(fileName));
 			
+			//Send message to player, what file (filename) has been created
 			sender.sendMessage(ChatColor.GREEN + "Created " + ChatColor.DARK_GREEN + "group" + letter + ".yml " + ChatColor.GREEN + "file.");
 		}
 		return true;
@@ -141,15 +185,28 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		return true;
 	}
 	
+	/**
+	 * Reset the whole configuration. Player is then added to the "cool-down" list for up to 10 seconds to choose, if he really wants to delete all of it.
+	 * @param sender
+	 * @return true. Always.
+	 */
 	private boolean commandReset(final CommandSender sender) {
+		//Add player to the cool-down list.
 		players.add(sender.getName());
+		
+		//Ask for approval from the player to really delete everything.
 		sender.sendMessage(ChatColor.GOLD + "Do you want to delete all configuration files?");
 		sender.sendMessage(ChatColor.RED + "\"/ch yes\": Delete all to reset");
+		
+		//Some special options for the player in-game
 		if(sender instanceof Player)
 			sender.sendMessage(ChatColor.RED + "\"/ch world\": Only delete group file of the world you're standing in");
+		
 		sender.sendMessage(ChatColor.GREEN + "\"/ch no\": Cancel procedure");
+		
 		sender.sendMessage(ChatColor.GOLD + "Process automatically cancelled in 10 seconds.");
 		
+		//Call tmpChat automatically after 10 seconds, no matter what.
 		Bukkit.getScheduler().scheduleSyncDelayedTask(CustomHealth.getPlugin(), new Runnable() {
 			public void run() {
 				tmpChat(sender, new String[]{"no"});
@@ -159,17 +216,24 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		return true;
 	}
 	
+	/**
+	 * The tmpChat, only called when player / CommandSender is in the cool-down list
+	 * @param sender
+	 * @param args
+	 */
 	private void tmpChat(CommandSender sender, String[] args) {
+		//Check, if sender is in that list. If not, just escape method.
 		if(!players.contains(sender.getName()))
 			return;
 		
+		//There has to be at least 1 argument
 		if(args.length > 0) {
-			if(args[0].equalsIgnoreCase("no")) {
+			//"no" - don't delete any of those files
+			if(args[0].equalsIgnoreCase("no")) 
 				sender.sendMessage(ChatColor.GOLD + "Process cancelled.");
-				players.remove(sender.getName());
-				return;
-			}
-			if(args[0].equalsIgnoreCase("world") && sender instanceof Player) {
+			
+			//"world" - delete configuration files that contain the worlds, in which the player stands in
+			else if(args[0].equalsIgnoreCase("world") && sender instanceof Player) {
 				YamlConfiguration config;
 				for(File file : new File(CustomHealth.getResourcePath() + "worlds/").listFiles()) {
 					if(!file.getName().endsWith(".yml"))
@@ -179,24 +243,19 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 					if(config.contains("worlds")) {
 						for(String s : config.getString("worlds").replaceAll(", ", ",").split(",")) {
 							if(((Player) sender).getWorld().getName().equals(s)) {
-								if(file.delete()) {
+								if(file.delete())
 									sender.sendMessage(ChatColor.DARK_GREEN + file.getName() + ChatColor.GREEN + " successfully deleted.");
-									return;
-								} else {
-									sender.sendMessage(ChatColor.RED + "World seems to be in a file called " + file.getName() + 
-											" but couldn't delete it for an unknown reason.");
-									return;
-								}
+								else
+									sender.sendMessage(ChatColor.RED + "World seems to be in a file called " + file.getName() + " but couldn't delete it for an unknown reason.");
 							}
 						}
 					}
 				}
 				
 				sender.sendMessage(ChatColor.RED + "There doesn't seem to be a file that contains the world " + ChatColor.DARK_RED + ((Player) sender).getWorld().getName());
-				players.remove(sender.getName());
-				return;
 			}
-			if(args[0].equalsIgnoreCase("yes")) {
+			//"yes" - delete all .yml files and create a new template
+			else if(args[0].equalsIgnoreCase("yes")) {
 				int amount = 0;
 				for(File file : new File(CustomHealth.getResourcePath() + "worlds/").listFiles()) {
 					if(file.getName().endsWith(".yml")) {
@@ -205,11 +264,16 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				}
 				sender.sendMessage(ChatColor.DARK_GREEN + "" + amount + ChatColor.GREEN + " files deleted!");
 				new File(CustomHealth.saveTemplate()).renameTo(new File(CustomHealth.getResourcePath() + "worlds/groupA.yml"));
-				players.remove(sender.getName());
-				return;
 			}
+			
+			//Remove player from cool-down list
+			players.remove(sender.getName());
+			return;
 		}
 		
+		/*
+		 * Could not interpret arguments, ask again
+		 */
 		sender.sendMessage(ChatColor.GOLD + "Do you want to delete all configuration files?");
 		sender.sendMessage(ChatColor.RED + "\"/ch yes\": Delete all to reset");
 		if(sender instanceof Player)
@@ -220,15 +284,26 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		
 	}
 	
+	/**
+	 * plugin command called. Also checks for updates, if enabled.
+	 * @see at.felixfritz.customhealth.CustomHealth#getVersions()
+	 * @param sender
+	 * @return true. Always.
+	 */
 	private boolean commandPlugin(CommandSender sender) {
+		//Send generic informations, name, version and author.
 		sender.sendMessage(ChatColor.LIGHT_PURPLE + CustomHealth.getPlugin().getDescription().getName() + 
 				", v" + CustomHealth.getPlugin().getDescription().getVersion() + " by " + CustomHealth.getPlugin().getDescription().getAuthors().get(0));
+		
+		//Send main BukkitDev homepage information
 		sender.sendMessage(ChatColor.LIGHT_PURPLE + "BukkitDev page: " + CustomHealth.getPlugin().getDescription().getWebsite());
 		
+		//Is update checking enabled?
 		if(CustomHealth.isUpdateCheckingEnabled()) {
 			sender.sendMessage(ChatColor.LIGHT_PURPLE + "Checking for updates...");
 			
 			try {
+				//Get string array from CustomHealth class. If index 1 is null, then there's no new update available
 				String[] versions = CustomHealth.getVersions();
 				if(versions[1] == null)
 					sender.sendMessage(ChatColor.GREEN + "Plugin is up to date!");
@@ -240,11 +315,17 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				sender.sendMessage(ChatColor.RED + "Had difficulties while talking to the server (" + e.getLocalizedMessage() + ")");
 			}
 		} else {
+			//Update checking is disabled.
 			sender.sendMessage(ChatColor.LIGHT_PURPLE + "Update checking disabled.");
 		}
 		return true;
 	}
 	
+	/**
+	 * Check, if CommandSender has any permission to use any of the commands.
+	 * @param sender
+	 * @return true, if he's allowed to use at least one of those
+	 */
 	private boolean hasAnyPermission(CommandSender sender) {
 		for(Permission per : CustomHealth.getPlugin().getDescription().getPermissions()) {
 			if(sender.hasPermission(per))
@@ -253,12 +334,20 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		return false;
 	}
 	
+	/**
+	 * onTabComplete method. This is so useful most of the times, yet so many people don't put it in their plugins. Why?
+	 */
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
+		
+		//List of strings that could be used for the tab-complete feature.
 		List<String> list = new ArrayList<String>();
+		
+		//Put all arguments in lower-case in the first place, otherwise I always have to do it in the if-statements
 		for(int x = 0; x < args.length; x++)
 			args[x] = args[x].toLowerCase();
 		
+		//Arguments 1 long, basic arguments can be added
 		if(args.length == 1) {
 			
 			if("create".startsWith(args[0]) && sender.hasPermission("customhealth.commands.create"))
@@ -273,6 +362,7 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				list.add("plugin");
 			
 		} else if(args.length == 2) {
+			//Arguments 2 long, either add filenames for the rename method or numbers for the create method.
 			if(args[0].equals("rename") && sender.hasPermission("customhealth.commands.rename")) {
 				for(File file : new File(CustomHealth.getResourcePath() + "worlds/").listFiles()) {
 					if(file.getName().endsWith(".yml") && file.getName().toLowerCase().startsWith(args[1]))
