@@ -25,6 +25,7 @@ import at.felixfritz.customhealth.eventlisteners.FoodChanger;
 import at.felixfritz.customhealth.eventlisteners.HeartChanger;
 import at.felixfritz.customhealth.eventlisteners.MainListener;
 import at.felixfritz.customhealth.eventlisteners.PlayerAppearsSomewhereListener;
+import at.felixfritz.customhealth.eventlisteners.SaveDeathValuesListener;
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 import at.felixfritz.customhealth.foodtypes.FoodValue;
 import at.felixfritz.customhealth.foodtypes.PotionValue;
@@ -65,6 +66,10 @@ public class CustomHealth extends JavaPlugin {
 		saveDefaultConfig();
 		getConfig().options().copyDefaults(true);
 		
+		if(getConfig().getBoolean("save-food-level") || getConfig().getBoolean("save-xp-level"))
+			Bukkit.getPluginManager().registerEvents(new SaveDeathValuesListener(getConfig().getBoolean("save-food-level"), getConfig().getBoolean("save-xp-level")), this);
+		
+		
 		//Create instance of resource path and make sure, the directory "plugins/CustomHealth/worlds/" exists
 		resourcePath = "plugins/" + getDescription().getName() + "/";
 		if(!new File(resourcePath + "worlds/").exists())
@@ -79,29 +84,29 @@ public class CustomHealth extends JavaPlugin {
 		
 		//Listen for the command "/chealth"
 		getCommand("chealth").setExecutor(new CommandMain());
-		
 		//Save static plugin instance. For all of you against static referencing, screw you, I know what I'm doing. I'm a professional. Especially with commenting. I know when to comment and how long comments should be. They should not be longer than necessary, but long enough to understand the context. Understood? Good.
 		plugin = this;
-		
-		Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
-			public void run() {
-				//Connect to rss-feed of the custom-health project in dev.bukkit.org, can throw IOException
-				updater = new Updater(plugin, 56474, plugin.getFile(), false);
-				
-				if(updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
-					String version = updater.getLatestName().replaceAll("[a-zA-Z ]", "");
-					String link = updater.getLatestFileLink();
-					log.info(prefix + "Update available: " + version + " (current: " + getDescription().getVersion() + "), link: " + link);
-				} else if(updater.getResult() != UpdateResult.NO_UPDATE && updater.getResult() != UpdateResult.DISABLED) {
-					if(updater.getResult() == UpdateResult.FAIL_DBO)
-						log.severe(prefix + "Could not connect to dev.bukkit.org - are you online?");
-					else if(updater.getResult() == UpdateResult.FAIL_APIKEY)
-						log.severe(prefix + "Admin might have improperly configured the API");
-					else
-						log.severe(prefix + "Could not check for updates for an unknown reason...");
+		if(getConfig().getBoolean("check-for-updates")) {
+			Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+				public void run() {
+					//Connect to rss-feed of the custom-health project in dev.bukkit.org, can throw IOException
+					updater = new Updater(plugin, 56474, plugin.getFile(), false);
+					
+					if(updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
+						String version = updater.getLatestName().replaceAll("[a-zA-Z ]", "");
+						String link = updater.getLatestFileLink();
+						log.info(prefix + "Update available: " + version + " (current: " + getDescription().getVersion() + "), link: " + link);
+					} else if(updater.getResult() != UpdateResult.NO_UPDATE && updater.getResult() != UpdateResult.DISABLED) {
+						if(updater.getResult() == UpdateResult.FAIL_DBO)
+							log.severe(prefix + "Could not connect to dev.bukkit.org - are you online?");
+						else if(updater.getResult() == UpdateResult.FAIL_APIKEY)
+							log.severe(prefix + "Admin might have improperly configured the API");
+						else
+							log.severe(prefix + "Could not check for updates for an unknown reason...");
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 	
 	
@@ -495,27 +500,51 @@ public class CustomHealth extends JavaPlugin {
 	 */
 	public static int getHungerRegenValue(Material mat) {
 		
-		if(mat == Material.MILK_BUCKET)
+		switch(mat) {
+		case MILK_BUCKET:
 			return 0;
-		if(mat == Material.POTATO_ITEM)
+			
+		case POTATO_ITEM:
 			return 1;
-		if(mat == Material.CAKE_BLOCK || mat == Material.COOKIE || mat == Material.MELON || mat == Material.POISONOUS_POTATO || mat == Material.RAW_CHICKEN
-				|| mat == Material.RAW_FISH || mat == Material.SPIDER_EYE)
+			
+		case CAKE_BLOCK:
+		case COOKIE:
+		case MELON:
+		case POISONOUS_POTATO:
+		case RAW_CHICKEN:
+		case RAW_FISH:
+		case SPIDER_EYE:
 			return 2;
-		if(mat == Material.PORK || mat == Material.RAW_BEEF)
+			
+		case PORK:
+		case RAW_BEEF:
 			return 3;
-		if(mat == Material.APPLE || mat == Material.CARROT_ITEM || mat == Material.GOLDEN_APPLE || mat == Material.ROTTEN_FLESH)
+			
+		case APPLE:
+		case CARROT_ITEM:
+		case GOLDEN_APPLE:
+		case ROTTEN_FLESH:
 			return 4;
-		if(mat == Material.BREAD || mat == Material.COOKED_FISH)
+			
+		case BREAD:
+		case COOKED_FISH:
 			return 5;
-		if(mat == Material.BAKED_POTATO || mat == Material.COOKED_CHICKEN || mat == Material.GOLDEN_CARROT || mat == Material.MUSHROOM_SOUP)
+			
+		case BAKED_POTATO:
+		case COOKED_CHICKEN:
+		case GOLDEN_CARROT:
+		case MUSHROOM_SOUP:
 			return 6;
-		if(mat == Material.COOKED_BEEF || mat == Material.GRILLED_PORK || mat == Material.PUMPKIN_PIE)
+			
+		case COOKED_BEEF:
+		case GRILLED_PORK:
+		case PUMPKIN_PIE:
 			return 8;
-		
-		CustomHealth.plugin.log.severe(CustomHealth.plugin.prefix + "Could not find any values for " + mat + "! Please report immediately if you think, that's a bug!");
-		return 0;
-		
+			
+		default:
+			CustomHealth.plugin.log.severe(CustomHealth.plugin.prefix + "Could not find any values for " + mat + "! Please report immediately if you think, that's a bug!");
+			return 0;
+		}
 	}
 	
 	
@@ -528,37 +557,63 @@ public class CustomHealth extends JavaPlugin {
 	 */
 	public static float getSaturationValue(Material mat) {
 		
-		if(mat == Material.MILK_BUCKET)
+		switch(mat) {
+		case MILK_BUCKET:
 			return 0F;
-		if(mat == Material.CAKE_BLOCK || mat == Material.COOKIE)
+			
+		case CAKE_BLOCK:
+		case COOKIE:
 			return 0.4F;
-		if(mat == Material.POTATO_ITEM)
+			
+		case POTATO_ITEM:
 			return 0.6F;
-		if(mat == Material.ROTTEN_FLESH)
+			
+		case ROTTEN_FLESH:
 			return 0.8F;
-		if(mat == Material.MELON || mat == Material.POISONOUS_POTATO || mat == Material.RAW_CHICKEN || mat == Material.RAW_FISH)
+			
+		case MELON:
+		case POISONOUS_POTATO:
+		case RAW_CHICKEN:
+		case RAW_FISH:
 			return 1.2F;
-		if(mat == Material.PORK || mat == Material.RAW_BEEF)
+			
+		case PORK:
+		case RAW_BEEF:
 			return 1.8F;
-		if(mat == Material.APPLE)
+			
+		case APPLE:
 			return 2.4F;
-		if(mat == Material.SPIDER_EYE)
-			return 3.2F;
-		if(mat == Material.CARROT_ITEM || mat == Material.PUMPKIN_PIE)
-			return 4.8F;
-		if(mat == Material.BREAD || mat == Material.COOKED_FISH)
-			return 6F;
-		if(mat == Material.BAKED_POTATO || mat == Material.COOKED_CHICKEN || mat == Material.MUSHROOM_SOUP)
-			return 7.2F;
-		if(mat == Material.GOLDEN_APPLE)
-			return 9.6F;
-		if(mat == Material.COOKED_BEEF || mat == Material.GRILLED_PORK)
-			return 12.8F;
-		if(mat == Material.GOLDEN_CARROT)
-			return 14.4F;
 		
-		CustomHealth.plugin.log.severe(CustomHealth.plugin.prefix + "Could not find any values for " + mat + "! Please report immediately if you think, that's a bug!");
-		return 0;
+		case SPIDER_EYE:
+			return 3.2F;
+			
+		case CARROT_ITEM:
+		case PUMPKIN_PIE:
+			return 4.8F;
+			
+		case BREAD:
+		case COOKED_FISH:
+			return 6F;
+			
+		case BAKED_POTATO:
+		case COOKED_CHICKEN:
+		case MUSHROOM_SOUP:
+			return 7.2F;
+		
+		case GOLDEN_APPLE:
+			return 9.6F;
+			
+		case COOKED_BEEF:
+		case GRILLED_PORK:
+			return 12.8F;
+		
+		case GOLDEN_CARROT:
+			return 14.4F;
+			
+		default:
+			CustomHealth.plugin.log.severe(CustomHealth.plugin.prefix + "Could not find any values for " + mat + "! Please report immediately if you think, that's a bug!");
+			return 0;
+		}
 	}
 	
 	
