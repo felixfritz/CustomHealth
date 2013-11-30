@@ -6,3 +6,8 @@
 # Do you want the plugin to search for a new
 # update when the command "/ch plugin" is typed in?
 check-for-updates: true
+
+# Do you want the XP or food level to be saved
+# and applied again after the player dies and respawns?
+save-food-level: false
+save-xp-level: false
