@@ -35,13 +35,18 @@ public class MainListener implements Listener {
 			
 			if(value.isOverrideEnabled()) {
 				evt.setCancelled(true);
-				if(evt.getPlayer().getItemInHand().getType() == Material.MILK_BUCKET)
-					evt.getPlayer().setItemInHand(new ItemStack(Material.BUCKET));
-				else
-					evt.getPlayer().getItemInHand().setAmount(evt.getPlayer().getItemInHand().getAmount() - 1);
-				evt.getPlayer().setFoodLevel(evt.getPlayer().getFoodLevel() + CustomHealth.getHungerRegenValue(evt.getItem().getType()));
-				evt.getPlayer().setSaturation(evt.getPlayer().getSaturation() + CustomHealth.getSaturationValue(evt.getItem().getType()));
-				evt.getPlayer().updateInventory();
+				Player p = evt.getPlayer();
+				if(p.getItemInHand().getType() == Material.MILK_BUCKET)
+					p.setItemInHand(new ItemStack(Material.BUCKET));
+				else {
+					if(p.getItemInHand().getAmount() == 1)
+						p.setItemInHand(new ItemStack(Material.AIR));
+					else
+						p.getItemInHand().setAmount(evt.getPlayer().getItemInHand().getAmount() - 1);
+				}
+				p.setFoodLevel(getCorrectValue(p.getFoodLevel() + CustomHealth.getHungerRegenValue(evt.getItem().getType())));
+				p.setSaturation(p.getSaturation() + CustomHealth.getSaturationValue(evt.getItem().getType()));
+				p.updateInventory();
 			}
 		}
 		
