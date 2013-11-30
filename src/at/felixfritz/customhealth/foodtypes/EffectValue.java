@@ -47,6 +47,15 @@ public abstract class EffectValue {
 		return false;
 	}
 	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(name);
+		for(String param : parameters)
+			sb.append('/').append(param);
+		return sb.toString();
+	}
+	
 	public abstract void applyEffect(Player p);
 	
 }
