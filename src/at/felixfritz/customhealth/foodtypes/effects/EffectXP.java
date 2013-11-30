@@ -5,6 +5,12 @@ import org.bukkit.entity.Player;
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 import at.felixfritz.customhealth.util.RandomValue;
 
+/**
+ * Give XP to the player.
+ * @author felixfritz
+ * @since 0.6
+ * @version 0.7
+ */
 public class EffectXP extends EffectValue {
 	
 	private RandomValue amountValue;
