@@ -5,6 +5,12 @@ import org.bukkit.entity.Player;
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 import at.felixfritz.customhealth.util.RandomValue;
 
+/**
+ * Set player on fire for a certain amount of time.
+ * @author felixfritz
+ * @since 0.6
+ * @version 0.7
+ */
 public class EffectBurn extends EffectValue {
 	
 	private RandomValue duration;
