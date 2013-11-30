@@ -1,6 +1,6 @@
 name: CustomHealth
 main: at.felixfritz.customhealth.CustomHealth
-version: 0.6
+version: 0.6.2
 author: felixfritz
 website: http://dev.bukkit.org/server-mods/custom-health/
 
