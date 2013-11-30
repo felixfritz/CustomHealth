@@ -8,6 +8,7 @@ import java.util.Random;
  * Random values between those 2 numbers can be determined then.
  * 
  * @author felixfritz
+ * @since 0.3
  * @version 0.6
  */
 public class RandomValue implements Cloneable {
@@ -30,6 +31,15 @@ public class RandomValue implements Cloneable {
 			this.minValue = maxValue;
 			this.maxValue = minValue;
 		}
+	}
+	
+	/**
+	 * One argument constructor
+	 * @param value
+	 */
+	public RandomValue(double value) {
+		this.minValue = value;
+		this.maxValue = value;
 	}
 	
 	/**
@@ -88,15 +98,32 @@ public class RandomValue implements Cloneable {
 		return Math.abs(maxValue - minValue);
 	}
 	
-	/*
-	 * Might use the toString() method in the future, but not now.
+	/**
+	 * Check, if both min and max is 0
+	 * @return true if that's the case
 	 */
-	/*@Override
+	public boolean isZero() {
+		return minValue == 0 && maxValue == 0;
+	}
+	
+	@Override
 	public String toString() {
-		if(minValue == maxValue)
+		if(minValue == maxValue) {
+			if(minValue == (int) minValue)
+				return String.valueOf((int) minValue);
 			return String.valueOf(minValue);
-		return minValue + "," + maxValue;
-	}*/
+		}
+		
+		String min, max;
+		
+		if(minValue == (int) minValue) 	min = String.valueOf((int) minValue);
+		else 							min = String.valueOf(minValue);
+		
+		if(maxValue == (int) maxValue)	max = String.valueOf((int) maxValue);
+		else							max = String.valueOf(maxValue);
+		
+		return min + "," + max;
+	}
 	
 	/**
 	 * Convert string into a RandomValue.
