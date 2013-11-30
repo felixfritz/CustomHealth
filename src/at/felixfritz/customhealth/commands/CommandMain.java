@@ -11,15 +11,22 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.permissions.Permission;
 
 import at.felixfritz.customhealth.CustomHealth;
+import at.felixfritz.customhealth.Database;
+import at.felixfritz.customhealth.foodtypes.FoodValue;
 
 /**
  * Main command class... Currently also the only one...
  * 
  * @author felixfritz
+ * @since 0.1
  * @version 0.6
  */
 public class CommandMain implements CommandExecutor, TabCompleter {
@@ -27,8 +34,12 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 	//List of player names, used for "cool-down" when resetting plugin (see commandReset and tmpChat method)
 	private List<String> players;
 	
+	//List of players, who are just about to create food items
+	private ArrayList<FoodCreators> foodCreators;
+	
 	public CommandMain() {
 		this.players = new ArrayList<String>();
+		this.foodCreators = new ArrayList<FoodCreators>();
 	}
 	
 	/**
@@ -46,6 +57,20 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		//Check, if player is in the "cool-down" list. If so, go to the tmpChat method and escape this method.
 		if(players.contains(sender.getName())) {
 			tmpChat(sender, args);
+			return true;
+		}
+		
+		if(foodCreators.contains(new FoodCreators(sender.getName(), null))) {
+			String arg;
+			if(args.length > 0) {
+				arg = "";
+				for(String s : args)
+					arg += " " + s;
+				arg = arg.substring(1);
+			} else
+				arg = "";
+			if(!FoodCreator.answerMade((Player) sender, foodCreators.get(foodCreators.indexOf(new FoodCreators(sender.getName(), null))), arg))
+				foodCreators.remove(new FoodCreators(sender.getName(), null));
 			return true;
 		}
 		
@@ -73,7 +98,7 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			
 			//"reload" argument, see static method reload() in CustomHealth for more.
 			if(args[0].equalsIgnoreCase("reload") && sender.hasPermission("customhealth.commands.reload")) {
-				CustomHealth.reload();
+				CustomHealth.reload(sender);
 				return true;
 			}
 			
@@ -86,9 +111,8 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				return commandPlugin(sender);
 			
 			//"set" argument, currently inactive but reserved for later usage.
-			if(args[0].equalsIgnoreCase("set")) {
-				sender.sendMessage(ChatColor.RED + "\"set\" command is under construction, don't ya worry!");
-				return true;
+			if(args[0].equalsIgnoreCase("set") && sender.hasPermission("customhealth.commands.set") && sender instanceof Player) {
+				return commandSet((Player) sender, args[1]);
 			}
 			
 			//"info" argument, removed for now. If someone really misses that command, call me now.
@@ -300,19 +324,13 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		
 		//Is update checking enabled?
 		if(CustomHealth.isUpdateCheckingEnabled()) {
-			sender.sendMessage(ChatColor.LIGHT_PURPLE + "Checking for updates...");
-			
-			try {
-				//Get string array from CustomHealth class. If index 1 is null, then there's no new update available
-				String[] versions = CustomHealth.getVersions();
-				if(versions[1] == null)
-					sender.sendMessage(ChatColor.GREEN + "Plugin is up to date!");
-				else {
-					sender.sendMessage(ChatColor.GREEN + "Update available. Current version: " + versions[0] + ", latest version: " + versions[1] + ".");
-					sender.sendMessage(ChatColor.GREEN + "Download here: " + versions[2]);
-				}
-			} catch (Exception e) {
-				sender.sendMessage(ChatColor.RED + "Had difficulties while talking to the server (" + e.getLocalizedMessage() + ")");
+			//Get string array from CustomHealth class. If index 1 is null, then there's no new update available
+			String[] versions = CustomHealth.getVersions();
+			if(versions == null)
+				sender.sendMessage(ChatColor.GREEN + "Plugin is up to date!");
+			else {
+				sender.sendMessage(ChatColor.GREEN + "Update available. Current version: " + versions[0] + ", latest version: " + versions[1] + ".");
+				sender.sendMessage(ChatColor.GREEN + "Download here: " + versions[2]);
 			}
 		} else {
 			//Update checking is disabled.
@@ -320,6 +338,50 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		}
 		return true;
 	}
+	
+	
+	private boolean commandSet(final Player p, String arg) {
+		try {
+			short damageValue = Short.parseShort(arg);
+			p.getItemInHand().setDurability(damageValue);
+			p.sendMessage(ChatColor.GREEN + "Set durability for " + p.getItemInHand().getType().name().toLowerCase() + " to " + ChatColor.DARK_GREEN 
+					+ damageValue + ChatColor.GREEN + ".");
+			
+			if(Database.getFoodValue(p.getWorld(), p.getItemInHand()) == null) {
+				p.sendMessage(ChatColor.YELLOW + "The item " + ChatColor.GOLD + p.getItemInHand().getType() 
+						+ ChatColor.YELLOW + " with the datavalue " + ChatColor.GOLD + damageValue + ChatColor.YELLOW 
+						+ " is not in the configuration file");
+				p.sendMessage(ChatColor.YELLOW + "Do you want to create one in-game? (10 seconds left)");
+				
+			} else {
+				p.sendMessage(ChatColor.YELLOW + "The item " + ChatColor.GOLD + p.getItemInHand().getType() 
+						+ ChatColor.YELLOW + " with the datavalue " + ChatColor.GOLD + damageValue + ChatColor.YELLOW 
+						+ " already exists.");
+				p.sendMessage(ChatColor.YELLOW + "Do you want to overwrite it in-game? (10 seconds lef)");
+			}
+			
+			p.sendMessage(ChatColor.GREEN + "/ch yes");
+			p.sendMessage(ChatColor.RED + "/ch no");
+			foodCreators.add(new FoodCreators(p.getName(), new FoodValue(p.getItemInHand())));
+			
+			Bukkit.getScheduler().scheduleSyncDelayedTask(CustomHealth.getPlugin(), new Runnable() {
+				public void run() {
+					int x;
+					if((x = foodCreators.indexOf(new FoodCreators(p.getName(), null))) >= 0) {
+						if(foodCreators.get(x).step == 0) {
+							foodCreators.remove(x);
+							p.sendMessage(ChatColor.RED + "Process cancelled.");
+						}
+					}
+				}
+			}, 20 * 10);
+			
+		} catch(NumberFormatException e) {
+			p.sendMessage(ChatColor.DARK_RED + arg + ChatColor.RED + " is not a whole number that I can understant.");
+		}
+		return true;
+	}
+	
 	
 	/**
 	 * Check, if CommandSender has any permission to use any of the commands.
@@ -340,12 +402,15 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
 		
-		//List of strings that could be used for the tab-complete feature.
-		List<String> list = new ArrayList<String>();
-		
 		//Put all arguments in lower-case in the first place, otherwise I always have to do it in the if-statements
 		for(int x = 0; x < args.length; x++)
 			args[x] = args[x].toLowerCase();
+		
+		if(foodCreators.contains(new FoodCreators(sender.getName(), null)))
+			return FoodCreator.onTabComplete(foodCreators.get(foodCreators.indexOf(new FoodCreators(sender.getName(), null))), args);
+		
+		//List of strings that could be used for the tab-complete feature.
+		List<String> list = new ArrayList<String>();
 		
 		//Arguments 1 long, basic arguments can be added
 		if(args.length == 1) {
@@ -377,5 +442,28 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		}
 		
 		return list;
+	}
+	
+	
+	protected static class FoodCreators {
+		
+		public String name;
+		public FoodValue value;
+		public int step;
+		
+		public FoodCreators(String name, FoodValue value) {
+			this.name = name;
+			this.value = value;
+			this.step = 0;
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if(o instanceof String)
+				return name.equalsIgnoreCase((String) o);
+			if(o instanceof FoodCreators)
+				return name.equals(((FoodCreators) o).name);
+			return false;
+		}
 	}
 }
