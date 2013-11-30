@@ -11,11 +11,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.permissions.Permission;
 
 import at.felixfritz.customhealth.CustomHealth;
@@ -140,6 +136,8 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 		sender.sendMessage(ChatColor.GRAY + "========[ " + ChatColor.GOLD + "CustomHealth" + ChatColor.GRAY + " ]========");
 		if(sender.hasPermission("customhealth.commands.create"))
 			sender.sendMessage(prefix + "create (#)" + suffix + "Create 1 or (#) world templates to work with.");
+		if(sender.hasPermission("customhealth.commands.set"))
+			sender.sendMessage(prefix + "set <#>" + suffix + "Set data value of item - create special items.");
 		if(sender.hasPermission("customhealth.commands.rename"))
 			sender.sendMessage(prefix + "rename <from> <to>" + suffix + "Rename configuration file");
 		if(sender.hasPermission("customhealth.commands.reload"))
@@ -417,6 +415,8 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 			
 			if("create".startsWith(args[0]) && sender.hasPermission("customhealth.commands.create"))
 				list.add("create");
+			if("set".startsWith(args[0]) && sender.hasPermission("customhealth.commands.set"))
+				list.add("set");
 			if("rename".startsWith(args[0]) && sender.hasPermission("customhealth.commands.rename"))
 				list.add("rename");
 			if("reload".startsWith(args[0]) && sender.hasPermission("customhealth.commands.reload"))
@@ -435,7 +435,7 @@ public class CommandMain implements CommandExecutor, TabCompleter {
 				}
 			}
 			
-			if(args[0].equals("create") && sender.hasPermission("customhealth.commands.create")) {
+			if((args[0].equals("create") && sender.hasPermission("customhealth.commands.create")) || (args[0].equals("set") && sender.hasPermission("customhealth.commands.set"))) {
 				for(int x = 1; x <= 25; x++)
 					list.add(String.valueOf(x));
 			}
