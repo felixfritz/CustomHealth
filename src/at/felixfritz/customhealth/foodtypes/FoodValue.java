@@ -10,8 +10,8 @@ import at.felixfritz.customhealth.util.RandomValue;
 
 public class FoodValue {
 	
-	private Material material;
-	private byte dataValue;
+	private final Material material;
+	private final short dataValue;
 	private RandomValue regenHearts;
 	private RandomValue regenHunger;
 	private RandomValue saturation;
@@ -22,15 +22,19 @@ public class FoodValue {
 	private boolean cancel;
 	private boolean override;
 	
-	public FoodValue(Material material, byte dataValue) {
-		this(material, dataValue, new RandomValue(0, 0), new RandomValue(0, 0), new RandomValue(0, 0));
+	public FoodValue(ItemStack item) {
+		this(item.getType(), item.getDurability(), new RandomValue(0), new RandomValue(0), new RandomValue(0));
 	}
 	
-	public FoodValue(Material material, byte dataValue, RandomValue regenHearts, RandomValue regenHunger) {
-		this(material, dataValue, regenHearts, regenHunger, new RandomValue(0, 0));
+	public FoodValue(Material material, short dataValue) {
+		this(material, dataValue, new RandomValue(0), new RandomValue(0), new RandomValue(0));
 	}
 	
-	public FoodValue(Material material, byte dataValue, RandomValue regenHearts, RandomValue regenHunger, RandomValue saturation) {
+	public FoodValue(Material material, short dataValue, RandomValue regenHearts, RandomValue regenHunger) {
+		this(material, dataValue, regenHearts, regenHunger, new RandomValue(0));
+	}
+	
+	public FoodValue(Material material, short dataValue, RandomValue regenHearts, RandomValue regenHunger, RandomValue saturation) {
 		
 		if(material == null || regenHearts == null || regenHunger == null || saturation == null)
 			throw new NullPointerException("Parameters may not be null!");
@@ -52,7 +56,7 @@ public class FoodValue {
 		return material;
 	}
 	
-	public byte getDataValue() {
+	public short getDataValue() {
 		return dataValue;
 	}
 	
@@ -124,7 +128,6 @@ public class FoodValue {
 		this.override = override;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean equals(Object o) {
 		if(o == null) return false;
@@ -132,7 +135,7 @@ public class FoodValue {
 		if(o instanceof Material)
 			return o == material;
 		if(o instanceof ItemStack)
-			return ((ItemStack) o).getType() == material && ((ItemStack) o).getData().getData() == dataValue;
+			return ((ItemStack) o).getType() == material && ((ItemStack) o).getDurability() == dataValue;
 		if(o instanceof FoodValue)
 			return ((FoodValue) o).material == material && ((FoodValue) o).dataValue == dataValue;
 		
