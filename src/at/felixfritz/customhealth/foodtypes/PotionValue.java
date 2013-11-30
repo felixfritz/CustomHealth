@@ -66,4 +66,44 @@ public class PotionValue {
 		return effect;
 	}
 	
+	@SuppressWarnings("deprecation")
+	public static PotionValue parsePotionValue(String[] values) {
+		if(values.length == 0) return null;
+		
+		PotionEffectType potion;
+		try {
+			potion = PotionEffectType.getById(Integer.parseInt(values[0]));
+		} catch(NumberFormatException e) {
+			potion = PotionEffectType.getByName(values[0]);
+		}
+		
+		if(potion == null) return null;
+		
+		PotionValue value = new PotionValue(potion);
+		
+		if(values.length > 1) {
+			RandomValue rand = RandomValue.parseRandomValue(values[1]);
+			
+			if(rand != null) value.strength = rand;
+			else return null;
+			
+			if(values.length > 2) {
+				rand = RandomValue.parseRandomValue(values[2]);
+				
+				if(rand != null) value.duration = rand;
+				else return null;
+				
+				if(values.length > 3) {
+					try {
+						value.setProbability(Integer.parseInt(values[3].replace("%", "")));
+					} catch(NumberFormatException e) {
+						return null;
+					}
+				}
+			}
+		}
+		
+		return value;
+	}
+	
 }
