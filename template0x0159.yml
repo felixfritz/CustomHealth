@@ -22,10 +22,15 @@ settings:
   # Example: "max-food-level: -1" - Mechanic in the game will not be touched by the plugin.
   max-food-level: -1
   
+  # How many hearts can a player have?
+  # Must be at least 1 (half a heart), there are no limits.
+  # 
+  # Example: "max-heart-level: 200" - Give the player 100 hearts
+  max-heart-level: -1
+  
   # Here you can decide whether or not the player should get hungry at any given time.
   # Setting it to "false" means that the player will not lose any hunger units.
   change-food-level: true
-
 
 
 # Coming up next is the food section, where you can configure the properties of eating food.
@@ -54,6 +59,7 @@ settings:
 #   - This parameter is for extra effects that don't qualify as potion effects
 #   - "xp": Give the player experience like this: "effect: [xp/<INTEGER>/<CHANCE>]" where "<INTEGER>" specifies the amount of experience that the consumer receives.
 #   - "burn": Set the player on fire: "effect: [burn/<DURATION>/<CHANCE>]" where "<DURATION>" is the amount of seconds (default: 10)
+#   - "explosion": Create an explosion beneath the feet of the player: "effect: [explosion/<SIZE>/<CHANCE>]". Size 1 is regular creeper size (default: 1)
 #   - "clear": Remove all potion effects, same as the milk bucket does: "effect: [clear/<CHANCE>]"
 #   - "override": Overrides the effects from the original food item (eg. no hunger effect from rotten flesh): "effect: [override]"
 #   - "cmd": Let the player perform a command: "effect: [cmd/<COMMAND>/<CHANCE>]" where "<COMMAND>" must not include the '/' at the beginning
