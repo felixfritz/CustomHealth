@@ -5,10 +5,16 @@ import org.bukkit.potion.PotionEffect;
 
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 
+/**
+ * Clear all existent potion effects (before food item is eaten)
+ * @author felixfritz
+ * @since 0.6
+ * @version 0.7
+ */
 public class EffectClear extends EffectValue {
 
 	public EffectClear(String[] parameters) {
-		super("c", parameters);
+		super("clear", parameters);
 		
 		if(parameters == null)
 			return;
