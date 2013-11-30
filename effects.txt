@@ -3,29 +3,29 @@
 # 
 # Here are all the potion effects:
 # 
-# Potion 1: Speed
-# Potion 2: Slow
-# Potion 3: Fast Digging
-# Potion 4: Slow Digging
-# Potion 5: Increase Damage (Strength)
+# Potion 1: SPEED
+# Potion 2: SLOW
+# Potion 3: FAST_DIGGING
+# Potion 4: SLOW_DIGGING
+# Potion 5: INCREASE_DAMAGE (Strength)
 #
-# Potion 6: Heal
-# Potion 7: Harm
-# Potion 8: Jump
-# Potion 9: Confusion (Nausea)
-# Potion 10: Regeneration
+# Potion 6: HEAL
+# Potion 7: HARM
+# Potion 8: JUMP
+# Potion 9: CONFUSION (Nausea)
+# Potion 10: REGENERATION
 # 
-# Potion 11: Damage Resistance
-# Potion 12: Fire Resistance
-# Potion 13: Water Breathing
-# Potion 14: Invisibility
-# Potion 15: Blindness
+# Potion 11: DAMAGE_RESISTANCE
+# Potion 12: FIRE_RESISTANCE
+# Potion 13: WATER_BREATHING
+# Potion 14: INVISIBILITY
+# Potion 15: BLINDNESS
 # 
-# Potion 16: Night Vision
-# Potion 17: Hunger
-# Potion 18: Weakness
-# Potion 19: Poison
-# Potion 20: Wither
+# Potion 16: NIGHT_VISION
+# Potion 17: HUNGER
+# Potion 18: WEAKNESS
+# Potion 19: POISON
+# Potion 20: WITHER
 # 
 # 
 # 
@@ -35,6 +35,7 @@
 # [xp/<AMOUNT>/<CHANCE>]: Give the player an <AMOUNT> of xp (whole number, can be negative). Chance can be a number from 0 to 100.
 # [cmd/<COMMAND>/<CHANCE>]: Make the player execute a command. Command may not include the '/' character! Chance can be a number from 0 to 100.
 # [burn/<DURATION>/<CHANCE>]: Set the player on fire for <DURATION> seconds (whole number). Chance can be a number from 0 to 100.
+# [explosion/<SIZE>/<CHANCE>]: Create explosion beneath the feet of the player. Chance can be a number from 0 to 100.
 # 
 # [override]: Original potion effects from food item will be cancelled. It might cause bugs!
 # [cancel]: Cancel the event, as if the food item was never eaten. All effects will not be applied.
