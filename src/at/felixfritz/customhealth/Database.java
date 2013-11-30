@@ -16,15 +16,20 @@ import at.felixfritz.customhealth.foodtypes.FoodValue;
  * Only main class (CustomHealth) is able to completely mess with this class,
  * outsiders only get to see things they're allowed to see.
  * @author felixfritz
- * @version 0.6
+ * @since 0.6
+ * @version 0.7
  */
 public class Database {
 	
 	//List of FoodValues, keys are the lists of worlds, values are the FoodValues
-	protected static Map<List<String>, List<FoodValue>> effects;
+	//protected static Map<String, List<FoodValue>> effects;
 	
 	//Max food level for certain worlds. If player oversteps maximum of food-levels, if gets pushed down to the value (Integer) again
 	protected static Map<String, Integer> maxFoodLevel;
+	
+	protected static Map<String, Integer> maxHeartLevel;
+	
+	//protected static List<PlayerDeathValues> deathValues;
 	
 	//I don't want anyone to create an object of the database
 	private Database(){}
@@ -34,16 +39,18 @@ public class Database {
 	 * Initialize maps. Only accessible from CustomHealth class
 	 */
 	protected static void initialize() {
-		effects = new HashMap<List<String>, List<FoodValue>>();
+		//effects = new HashMap<String, List<FoodValue>>();
 		maxFoodLevel = new HashMap<String, Integer>();
+		maxHeartLevel = new HashMap<String, Integer>();
 	}
 	
 	/**
 	 * Free maps (avoid memory leaks). Only accessible from CustomHealth class
 	 */
 	protected static void free() {
-		effects = null;
+		//effects = null;
 		maxFoodLevel = null;
+		maxHeartLevel = null;
 	}
 	
 	/**
@@ -52,34 +59,29 @@ public class Database {
 	 * @param item (which is hopefully edible)
 	 * @return FoodValue of item in the world
 	 */
-	@SuppressWarnings("deprecation")
-	public static FoodValue getFoodValue(World world, ItemStack item) {
+	/*public static FoodValue getFoodValue(World world, ItemStack item) {
 		if(item == null)
 			return null;
 		
-		for(List<String> list : effects.keySet()) {
-			if(list.contains(world.getName())) {
-				List<FoodValue> ol = effects.get(list);
-				if(ol.indexOf(new FoodValue(item.getType(), item.getData().getData())) >= 0)
-					return ol.get(ol.indexOf(new FoodValue(item.getType(), item.getData().getData())));
-				return null;
-			}
+		if(effects.containsKey(world.getName())) {
+			List<FoodValue> ol = effects.get(world.getName());
+			int x;
+			if((x = ol.indexOf(new FoodValue(item.getType(), item.getDurability()))) >= 0)
+				return ol.get(x);
+			return null;
 		}
+		
 		return null;
-	}
+	}*/
 	
 	/**
 	 * Check, if the world named "input" is registered in the FoodValues-Map.
 	 * @param name
 	 * @return true, if it does exist.
 	 */
-	public static boolean hasWorld(String name) {
-		for(List<String> list : effects.keySet()) {
-			if(effects.get(list).contains(name))
-				return true;
-		}
-		return false;
-	}
+	/*public static boolean hasWorld(String name) {
+		return effects.containsKey(name);
+	}*/
 	
 	/**
 	 * Get the max amount of food bars that can be filled up in that world
@@ -92,4 +94,54 @@ public class Database {
 		return -1;
 	}
 	
+	
+	public static int getMaxHeartLevel(World world) {
+		if(maxHeartLevel.containsKey(world.getName()))
+			return maxHeartLevel.get(world.getName());
+		return -1;
+	}
+	
+	
+	
+	/*private static class PlayerDeathValues {
+		
+		private String name;
+		private double hearts;
+		private float saturation;
+		
+		public PlayerDeathValues(String name, double hearts, float saturation) {
+			this.name = name;
+			this.hearts = hearts;
+			this.saturation = saturation;
+		}
+		
+		public String getName() {
+			return name;
+		}
+		
+		public double getHearts() {
+			return hearts;
+		}
+		
+		public void setHearts(double hearts) {
+			this.hearts = hearts;
+		}
+		
+		public float getSaturation() {
+			return saturation;
+		}
+		
+		public void setSaturation(float saturation) {
+			this.saturation = saturation;
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if(o instanceof String)
+				return o.equals(name);
+			if(o instanceof Player)
+				return ((Player) o).getName().equals(name);
+			return false;
+		}
+	}*/
 }
