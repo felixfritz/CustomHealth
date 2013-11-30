@@ -1,9 +1,16 @@
 package at.felixfritz.customhealth.foodtypes.effects;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import at.felixfritz.customhealth.foodtypes.EffectValue;
 
+/**
+ * Perform a certain command.
+ * @author felixfritz
+ * @since 0.6
+ * @version 0.7
+ */
 public class EffectCmd extends EffectValue {
 	
 	private String cmd;
@@ -33,6 +40,6 @@ public class EffectCmd extends EffectValue {
 	
 	@Override
 	public void applyEffect(Player p) {
-		p.performCommand(cmd);
+		p.performCommand(cmd.replaceAll("@p", p.getName()).replaceAll("@r", Bukkit.getOnlinePlayers()[Bukkit.getOnlinePlayers().length].getName()));
 	}
 }
